@@ -21,18 +21,23 @@ histogram <- function(data, metric, binzwidth, title)
   geom_histogram(bins = binzwidth) +
   ggtitle(title)
 
+histogramwidth <- function(data, metric, binzwidth, title)
+  ggplot(data, aes({{ metric }})) +
+  geom_histogram(binwidth = binzwidth) +
+  ggtitle(title)
+
 boxplot <- function(data, plot_division, metric, title){
   ggplot(data, aes(x=factor({{plot_division}}), y={{metric}})) +
     geom_boxplot(alpha = 0, aes(color = {{plot_division}})) +
     geom_jitter(height = 0, alpha = 0.25, size = 0.5, width = 0.3) +
-    stat_n_text() +
+    #stat_n_text() +
     ggtitle(title)
 }
 
 barplot <- function(data, variable, title){
   ggplot(data, aes({{variable}})) +
     geom_bar()+
-    stat_n_text() +
+    #stat_n_text() +
     ggtitle(title)
 }
 
