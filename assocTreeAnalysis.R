@@ -24,6 +24,13 @@
 
 #create a SECOND datasheet that doesn't include dead trees, but is otherwise exactly the same.  The easiest way to do this is to copy the original datasheet and filter out dead trees, then repeat all the steps above.
 
+assoc_data <- read.csv("26_04_associate_tree_data.csv")
+assoc_data_larger_trees <- assoc_data %>% filter(DBH..cm. >= 5)
+
+assoc_data_larger_trees_only_living <- assoc_data_larger_trees %>% filter(dead.alive. == "alive")
+
+write.csv(assoc_data_larger_trees, "Assoc_data_larger_trees.csv")
+
 #----------------------------------------
 #Step one
 #DATA + PACKAGE UPLOAD, DATA VERIFICATION
