@@ -1,0 +1,277 @@
+---
+title: "25_10_23_Revised Maps/Scatterplots"
+author: "Catherine dell'Olio"
+date: "2025-10-23"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+```{r setup, include=FALSE, warning=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(repos=structure(c("https://cloud.r-project.org", "http://www.stats.ox.ac.uk/pub/RWin" ), .Names = c("CRAN", "CRANextra")))
+```
+```{r scripts, echo=FALSE, warning=FALSE, include=FALSE}
+#I still needed to call these scripts to work easily in this script, but the file knits fine, so no worries
+setwd("~/dataAnalysisCfd")
+source('dataSplitter.R')
+source('chartBuilder.R')
+```
+The goal of this project is to update and improve charts and maps that don't work well, and add new maps and charts to show new damage categorization.
+
+Specifically, I will **redo comparison of canker Purdue to canopy Purdue, where points are not all stacked on each other but instead we can see where they are more dense (by size or color). Separate the two sites.
+
+**update all graphs reliant on cankers-with-NAs in Prelim-Maps-+-Scatterplots.pdf with more informative color scales (and again, a way to tell where data points are overlaid)
+
+I will map deer browse and other damage spatially to check for patterns.
+
+I also want to look at how many trees are in each canopy class, and how canopy class relates to parameters of canker severity and health.  This can potentially set up a later analysis in a GLMM format where canopy class may be a predictor of canker severity or health---stay tuned!
+
+```{r purduesrevisited, echo=FALSE, warning=FALSE, fig.keep='all', fig.show='hold', out.width="50%"}
+
+scatterplot(data_CPVTliveadults, live_adult_purdue_canker_rating, live_adult_purdue_canopy_ranking, "Purdue ratings at CPVT") +
+  geom_jitter(width=0.1, height=0.1)
+
+  ggplot(data_CPVTliveadults, aes(live_adult_purdue_canker_rating, live_adult_purdue_canopy_ranking)) +
+  geom_hex() +
+  geom_smooth(method='lm') +
+  ggtitle("Purdue ratings at CPVT")
+  
+  ggplot(data_CPVTliveadults, aes(live_adult_purdue_canker_rating, live_adult_purdue_canopy_ranking)) +
+  geom_bin_2d()+
+  scale_color_distiller(palette= "Purples") +
+  geom_smooth(method='lm') +
+  ggtitle("Purdue ratings at CPVT")
+  
+scatterplot(data_ILMliveadults, live_adult_purdue_canker_rating, live_adult_purdue_canopy_ranking, "Purdue ratings at ILM") +
+  geom_jitter(width=0.1, height=0.1)
+
+  ggplot(data_ILMliveadults, aes(live_adult_purdue_canker_rating, live_adult_purdue_canopy_ranking)) +
+  geom_hex() +
+  geom_smooth(method='lm') +
+  ggtitle("Purdue ratings at ILM")
+  
+  ggplot(data_ILMliveadults, aes(live_adult_purdue_canker_rating, live_adult_purdue_canopy_ranking)) +
+  geom_bin_2d()+
+  scale_color_distiller(palette= "Purples") +
+  geom_smooth(method='lm') +
+  ggtitle("Purdue ratings at ILM")
+```
+
+```{r redoneseedlingmaps, echo=FALSE, warning=FALSE, fig.keep='all', fig.show='hold', out.width="50%"}
+
+map(data_CPVTliveseedlings, "orange4", FALSE, "CPVT live seedlings")
+map(data_ILMliveseedlings, "orange4", FALSE, "ILM live seedlings")
+map(data_CPVTliveseedlings, height_ft, TRUE, "CPVT live seedlings")
+map(data_ILMliveseedlings, height_ft, TRUE, "ILM live seedlings")
+map(data_ILMliveseedlings, seedling_canker_base, TRUE, "ILM live seedlings by canker") + scale_color_gradient(low = "blue", high = "red")
+map(data_CPVTliveseedlings, seedling_canker_base, TRUE, "CPVT live seedlings by canker") + scale_color_gradient(low = "blue", high = "red")
+map(data_ILMliveseedlings, seedling_germ_yr, TRUE, "ILM live seedlings by age")
+map(data_CPVTliveseedlings, seedling_germ_yr, TRUE, "CPVT live seedlings by age")
+```
+
+```{r maps, echo=FALSE, warning=FALSE, fig.keep='all', fig.show='hold', out.width="50%"}
+
+map(data_CPVTseedlings, deer_browse, TRUE, "Deer browse patterns at CPVT")
+map(data_ILMseedlings, deer_browse, TRUE, "Deer browse patterns at ILM")
+map(data_CPVTseedlings, mowing, TRUE, "Mowing patterns at CPVT")
+map(data_ILMseedlings, mowing, TRUE, "Mowing patterns at ILM")
+map(data_CPVTseedlings, rabbit_browse, TRUE, "Rabbit browse patterns at CPVT")
+map(data_ILMseedlings, rabbit_browse, TRUE, "Rabbit browse patterns at ILM")
+map(data_CPVTseedlings, vole_nibbling, TRUE, "Vole nibbling patterns at CPVT")
+map(data_ILMseedlings, vole_nibbling, TRUE, "Vole nibbling patterns at ILM")
+map(data_CPVTseedlings, deer_rub, TRUE, "Deer rub patterns at CPVT")
+map(data_ILMseedlings, deer_rub, TRUE, "Deer rub patterns at ILM")
+```
+Mowing is the only type with enough data to see a pattern, and again, only at CPVT, where it is concentrated in the eastern half of the park.
+
+```{r CPVTmowing, echo=FALSE, fig.keep='all', fig.show='hold', out.width="50%"}
+
+map(data_CPVTseedlings, mowing, TRUE, "Mowing damage across ages in CPVT seedlings") + facet_wrap( ~ seedling_germ_yr)
+```
+Mowing damage is more common in the older trees, and seems to have been largely not performed in the most recent years.  New seedlings from 2025 are almost entirely in previously mowed areas.
+
+```{r canopy_class, echo=FALSE, fig.keep='all', fig.show='hold', out.width="50%"}
+boxplot(data_liveadults, adult_crown_class, live_adult_canker_base, "Canker across canopy classes")
+boxplot(data_CPVTliveadults, adult_crown_class, live_adult_canker_1stlivebranch, "Canker to first main branch across canopy classes")
+boxplot(data_liveadults, adult_crown_class, live_adult_girdle, "Girdling across canopy classes")
+boxplot(data_liveadults, adult_crown_class, adult_percent_live_canopy, "Percent canopy across all canopy classes")
+barplot(data_liveadults, adult_crown_class, "Crown classes overall")
+barplot(data_CPVTliveadults, adult_crown_class, "CPVT Crown classes overall")
+barplot(data_ILMliveadults, adult_crown_class, "ILM Crown classes overall")
+```
+So this is interesting, but my first question is how many of these no canopy trees are hybrids, which are usually planted outside of forested ecosystems?  Could be interacting here.  Most of the no canopy trees are found in CPVT, which we don't have any genetics data on just yet.
+
+These suppressed trees are doing really well, but are also the smallest group.  There could be a lot of reasons why---survivorship bias? Age---less time to develop extensive cankering?
+
+Speaking on survivorship curves: revisiting densiometer readings in different cardinal directions rather than just overall
+```{r densiometersurvivorship, echo=FALSE, fig.keep='all', fig.show='hold', out.width="50%"}
+scatterplot(data_seedlings, densi_n, seedling_germ_yr, "Germ yr vs densi north")
+scatterplot(data_ILMseedlings, densi_n, seedling_germ_yr, "Germ yr vs densi north ILM")
+scatterplot(data_CPVTseedlings, densi_n, seedling_germ_yr, "Germ yr vs densi north CPVT")
+
+scatterplot(data_seedlings, densi_s, seedling_germ_yr, "Germ yr vs densi South")
+scatterplot(data_ILMseedlings, densi_s, seedling_germ_yr, "Germ yr vs densi South ILM")
+scatterplot(data_CPVTseedlings, densi_s, seedling_germ_yr, "Germ yr vs densi South CPVT")
+
+scatterplot(data_seedlings, densi_w, seedling_germ_yr, "Germ yr vs densi West")
+scatterplot(data_ILMseedlings, densi_w, seedling_germ_yr, "Germ yr vs densi West ILM")
+scatterplot(data_CPVTseedlings, densi_w, seedling_germ_yr, "Germ yr vs densi West CPVT")
+
+scatterplot(data_seedlings, densi_e, seedling_germ_yr, "Germ yr vs densi East")
+scatterplot(data_ILMseedlings, densi_e, seedling_germ_yr, "Germ yr vs densi east ILM")
+scatterplot(data_CPVTseedlings, densi_e, seedling_germ_yr, "Germ yr vs densi east CPVT")
+```
+The pattern between germination year and densiometer is not really specific to any cardinal direction; across all four, older seedlings tend only to have higher densiometer readings, and the relationship is driven by seedlings from CPVT.
+
+```{r associatedtreesADULTSboxplots, echo=FALSE, fig.keep='all', fig.show='hold', out.width="33%"}
+
+assoctree <- function(tree){
+  data0 <- data_liveadults %>% filter({{tree}} == "0")
+  data1 <-data_liveadults %>% filter({{tree}} == "1")
+  data0 <- data0$live_adult_canker_base
+  data1 <- data1$live_adult_canker_base
+  
+  t_test <- t.test(data0,data1)
+  boxplot(data_liveadults, {{tree}}, live_adult_canker_base, "Canker at base in live trees associated with") +
+  labs(subtitle = paste0("p =", round(t_test$p.value, 6)))
+}
+
+assoctree(dogwood)
+assoctree(black.walnut)
+assoctree(white.pine)
+assoctree(red.cedar)
+assoctree(white.cedar)
+assoctree(malus)
+assoctree(buckthorn)
+assoctree(ash)
+assoctree(elm)
+#not enough observations assoctree(mulberry)
+assoctree(basswood)
+assoctree(sumac)
+assoctree(honeysuckle)
+assoctree(elderberry)
+assoctree(prunus)
+#not enough observations assoctree(lilac)
+assoctree(boxelder)
+assoctree(maple)
+#DOESNT EXIST assoctree(hackberry)
+assoctree(butternut)
+assoctree(oak)
+assoctree(poplar)
+#not enough observations assoctree(hazelnut)
+#not enough observations assoctree(beech)
+assoctree(gooseberry)
+#not enough observations assoctree(spruce)
+assoctree(birch)
+```
+
+There is a lot to unpack here, but pretty encouraging!
+
+```{r assoctreesSEEDLINGSboxplots, echo=FALSE, fig.keep='all', fig.show='hold', out.width="33%"}
+
+assoctree <- function(tree){
+  data0 <- data_liveseedlings %>% filter({{tree}} == "0")
+  data1 <-data_liveseedlings %>% filter({{tree}} == "1")
+  data0 <- data0$seedling_canker_base
+  data1 <- data1$seedling_canker_base
+  
+  u_value <- wilcox.test(data0,data1)
+  boxplot(data_liveseedlings, {{tree}}, seedling_canker_base, "Seedling canker base in live seedlings associated with") +
+  labs(subtitle = paste0("p =", round(u_value$p.value, 6)))
+}
+
+assoctree(dogwood)
+assoctree(black.walnut)
+assoctree(white.pine)
+assoctree(red.cedar)
+assoctree(white.cedar)
+assoctree(malus)
+assoctree(buckthorn)
+assoctree(ash)
+assoctree(elm)
+#not enough observations assoctree(mulberry)
+assoctree(basswood)
+assoctree(sumac)
+assoctree(honeysuckle)
+#not enough observations assoctree(elderberry)
+#not enough observations assoctree(prunus)
+assoctree(lilac)
+assoctree(boxelder)
+assoctree(maple)
+#DOESNT EXIST assoctree(hackberry)
+assoctree(butternut)
+assoctree(oak)
+assoctree(poplar)
+#not enough observations assoctree(hazelnut)
+#not enough observations assoctree(beech)
+#not enough observations assoctree(gooseberry)
+assoctree(spruce)
+assoctree(birch)
+```
+
+```{r healthyUnhealthyTrees, echo=FALSE, fig.keep='all', fig.show='hold', out.width="33%"}
+
+scatterplot(data_ILMliveadults, live_adult_canker_base, adult_percent_live_canopy, "Canker at base vs live canopy") +
+  geom_jitter(width=3)
+
+data_fightertreesILMv1 <- data_ILMliveadults %>% filter(adult_percent_live_canopy >= 75 & live_adult_canker_base >= 50)
+
+scatterplot(data_ILMliveadults, live_adult_purdue_canker_rating, live_adult_purdue_canopy_ranking, "Purdue ratings at ILM")
+
+data_fightertreesILMv2 <- data_ILMliveadults %>% filter(live_adult_purdue_canker_rating >= 3 & live_adult_purdue_canopy_ranking < 2)
+
+scatterplot(data_CPVTliveadults, live_adult_canker_base, adult_percent_live_canopy, "Canker at base vs live canopy") +
+  geom_jitter(width=3)
+
+data_fightertreesCPVTv1 <- data_CPVTliveadults %>% filter(adult_percent_live_canopy >= 75 & live_adult_canker_base >= 62)
+
+scatterplot(data_CPVTliveadults, live_adult_purdue_canker_rating, live_adult_purdue_canopy_ranking, "Purdue ratings at CPVT")
+
+data_fightertreesCPVTv2 <- data_CPVTliveadults %>% filter(live_adult_purdue_canker_rating >= 3 & live_adult_purdue_canopy_ranking <= 2)
+
+ggplot() +
+  geom_point(data=data_fightertreesILMv1, aes(x=gps_w, y=gps_n), color="red1") +
+  geom_point(data=data_fightertreesILMv2, aes(x=gps_w, y=gps_n), color="red4") +
+  ggtitle("ILM trees based on percentages(light) and purdue (dark red)")
+
+ggplot() +
+  geom_point(data=data_fightertreesCPVTv1, aes(x=gps_w, y=gps_n), color="red1") +
+  geom_point(data=data_fightertreesCPVTv2, aes(x=gps_w, y=gps_n), color="red4") +
+  ggtitle("CPVT trees based on percentages(light) and purdue (dark red)")
+```
+There is a lot of overlap between doing it these ways which is expected---they're correlated measurements:
+
+```{r correlation, echo=FALSE}
+scatterplot(data_liveadults, live_adult_purdue_canopy_ranking, adult_percent_live_canopy, "Canopy in ranking vs canopy in percentage") + geom_jitter(width=0.1) + labs(subtitle= cor.test(as.numeric(data_liveadults$live_adult_purdue_canopy_ranking), as.numeric(data_liveadults$adult_percent_live_canopy))$p.value)
+
+scatterplot(data_liveadults, live_adult_purdue_canker_rating, live_adult_canker_base, "Canker in ranking vs canker in percentage") + geom_jitter(width=0.1) + labs(subtitle= cor.test(as.numeric(data_liveadults$live_adult_purdue_canker_rating), as.numeric(data_liveadults$live_adult_canker_base))$p.value)
+```
+But even with those correlations, you can see there is a lot of overlap in canker at base for trees given a purdue ranking of 3 vs 2.5 or 3.5. So these metrics don't capture the exact same thing and won't return the same results.
+
+
+SPATIAL AUTOCORRELATION AND INTERPOLATION
+```{r interpolationofcanker, echo=FALSE}
+
+d <- data_ILMliveadults
+plot(sort(data_ILMliveadults$live_adult_canker_base), ylab='Canker percentage of base in ILM live adults', las=1, xlab='Trees')
+
+library(sp)
+dsp <- SpatialPoints(d[,10:9], proj4string=CRS("+proj=longlat +datum=NAD83"))
+dsp <- SpatialPointsDataFrame(dsp, d)
+# define groups for mapping
+cuts <- c(0,20,40,60,80,100)
+# set up a palette of interpolated colors
+blues <- colorRampPalette(c('yellow', 'orange', 'blue', 'blue4'))
+#pols <- list("sp.polygons", fill = "lightgray") removing this and , sp.layout=pols fixes my current map because I am not using counties as a backdrop
+spplot(dsp, 'live_adult_canker_base', cuts=cuts, col.regions=blues(5), pch=20, cex=2)
+
+RMSE <- function(observed, predicted) {
+  sqrt(mean((predicted - observed)^2, na.rm=TRUE)) #i dont agree with having na.rm in here, bc those NAs are 0s, not excluded. but it doesn't fix the problem
+}
+null <- RMSE(mean(as.numeric(dsp$live_adult_cankerbase)), as.numeric(dsp$live_adult_canker_base))
+null
+## NaN, bu not getting the warning that it will be returning NaN anymore bc it is not numeric. soooo
+
+```
+

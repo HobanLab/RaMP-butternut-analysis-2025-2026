@@ -1,0 +1,68 @@
+---
+title: "exploring densiometer readings"
+author: "Catherine dell'Olio"
+date: "2025-11-14"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(repos=structure(c("https://cloud.r-project.org", "http://www.stats.ox.ac.uk/pub/RWin" ), .Names = c("CRAN", "CRANextra")))
+
+setwd("~/dataAnalysisCfd")
+source('dataSplitter.R')
+source('chartBuilder.R')
+```
+
+
+```{r densiometers, echo=FALSE, warning=FALSE, results='hide', message=FALSE, fig.keep='all', fig.show="hold", out.width="25%"}
+scatterplot(data_seedlings, densi_s, seedling_canker_base, "Canker at base vs densiometer south")
+scatterplot(data_seedlings, densi_n, seedling_canker_base, "Canker at base vs densiometer north")
+scatterplot(data_seedlings, densi_e, seedling_canker_base, "Canker at base vs densiometer east")
+scatterplot(data_seedlings, densi_w, seedling_canker_base, "Canker at base vs densiometer west")
+scatterplot(data_seedlings, average_densi, seedling_canker_base, "Canker at base vs av. densiometer")
+
+scatterplot(data_seedlings, densi_s, seedling_percent_live_canopy, "Canker at base vs densiometer south")
+scatterplot(data_seedlings, densi_n, seedling_percent_live_canopy, "Canker at base vs densiometer north")
+scatterplot(data_seedlings, densi_e, seedling_percent_live_canopy, "Canker at base vs densiometer east")
+scatterplot(data_seedlings, densi_w, seedling_percent_live_canopy, "Canker at base vs densiometer west")
+scatterplot(data_seedlings, average_densi, seedling_percent_live_canopy, "Canker at base vs av. densiometer")
+```
+Sorry for the six hundred graphs here---the point of showing them is kind of that there is a whole lot of nothing in these relationships between light and canker/canopy for seedlings.
+None of the densiometer readings seem to be showing much relationship to canker load
+
+```{r overall_densi, echo=FALSE, warning=FALSE, fig.keep='all', fig.show='hold', out.width="50%"}
+scatterplot(data_seedlings, average_densi, height_ft, "Height vs av. densiometer") + facet_wrap( ~ seedling_germ_yr)
+scatterplot(data_seedlings, average_densi, basal_diameter_mm, "Basal diameter vs av. densiometer") + facet_wrap(~ seedling_germ_yr)
+```
+Neither metric of growth here is related to light conditions---seedlings are not putting on more height or weight in higher light conditions. I am wondering if this could be interacting with damage---it's possible that butternuts in more open, sunny areas are also more vulnerable to damage that stunts their growth.
+
+```{r densi_germyr, echo=FALSE, warning=FALSE, fig.keep='all', fig.show='hold', out.width="50%"}
+scatterplot(data_seedlings, average_densi, seedling_germ_yr, "Germ yr vs densi")
+scatterplot(data_ILMseedlings, average_densi, seedling_germ_yr, "Germ yr vs densi ILM")
+scatterplot(data_CPVTseedlings, average_densi, seedling_germ_yr, "Germ yr vs densi CPVT")
+```
+There is a gap, clearer in CPVT---there are few to no older seedlings in lower light conditions, which might indicate some survivorship bias.
+
+```{r densiometerin2022vs2025, warning=FALSE}
+data0 <- data_liveseedlings %>% filter(seedling_germ_yr == 2022)
+data1 <- data_liveseedlings %>% filter(seedling_germ_yr == 2025)
+fulldata <- rbind(data0, data1)
+data0 <- data0$average_densi
+data1 <- data1$average_densi
+u_value <- wilcox.test(data0, data1)
+boxplot(fulldata, seedling_germ_yr, average_densi, "Densiometer readings compared from 2022 to 2025") +
+    labs(subtitle = paste0("p =", round(u_value$p.value, 6)))
+```
+Now I will expand this to include every tree before 2024 and every tree after or in 2024 as the two groups.
+```{r densiometer_pre_post_2024, warning=FALSE}
+data0 <- data_liveseedlings %>% filter(seedling_germ_yr < 2024)
+data1 <- data_liveseedlings %>% filter(seedling_germ_yr >= 2024)
+fulldata <- rbind(data0, data1)
+data0 <- data0$average_densi
+data1 <- data1$average_densi
+u_value <- wilcox.test(data0, data1)
+boxplot(fulldata, seedling_germ_yr, average_densi, "Densiometer readings compared pre and through 2024") +
+    labs(subtitle = paste0("p =", round(u_value$p.value, 6)))
+```
+

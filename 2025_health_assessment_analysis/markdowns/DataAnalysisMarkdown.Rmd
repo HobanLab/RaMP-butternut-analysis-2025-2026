@@ -1,0 +1,236 @@
+---
+title: "dataDocumentation"
+author: "Catherine dell'Olio"
+date: "2025-10-20"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(Rmisc)
+library(ggplot2)
+library(vegan)
+library(dplyr)
+```
+
+```{r dataSplitter, include=FALSE}
+data <- read.csv("datasheet.csv")
+
+data_seedlings <- data %>% filter(seedling_or_adult == "Seedling")
+average_densi <- numeric(nrow(data_seedlings))
+data_seedlings <- cbind(data_seedlings, average_densi)
+for (i in 1:nrow(data_seedlings)) {
+  data_seedlings$average_densi[i] <- 1.04 * mean(c(data_seedlings$densi_n[i], data_seedlings$densi_s[i], data_seedlings$densi_e[i], data_seedlings$densi_w[i]))
+}
+
+data_adults <- data %>% filter(seedling_or_adult == "Adult")
+
+data_liveseedlings <- data_seedlings %>% filter(seedling_dead_or_alive == "Alive")
+
+data_liveadults <- data_adults %>% filter(adult_dead_or_alive == "Alive")
+
+retention_strategy <- numeric(nrow(data_liveadults))
+data_liveadults <- cbind(data_liveadults, retention_strategy)
+
+for (i in 1:nrow(data_liveadults)) {
+  if (is.na(data_liveadults$live_adult_canker_base[i]))
+    data_liveadults$live_adult_canker_base[i] <- 0
+}
+
+for(i in 1:nrow(data_liveadults)){
+  if ((data_liveadults$adult_percent_live_canopy[i] > 70  &
+       data_liveadults$live_adult_canker_base[i] < 20) |
+      (data_liveadults$adult_percent_live_canopy[i] >= 50 &
+       data_liveadults$live_adult_canker_base[i] == 0))
+    data_liveadults$retention_strategy[i] <- "healthy"
+  else data_liveadults$retention_strategy[i] <- "unhealthy"
+}
+
+data_ILM <- data %>% filter(site == "ILM")
+data_ILMhybridvis <- data_ILM %>% filter(hybrid_visibility == "Y")
+
+data_CPVT <- data %>% filter(site == "CPVT")
+data_CPVThybridvis <- data_CPVT %>% filter(hybrid_visibility == "Y")
+
+data_CPVTadults <- data_adults %>% filter(site == "CPVT")
+
+data_ILMadults <- data_adults %>% filter(site == "ILM")
+
+data_CPVTseedlings <- data_seedlings %>% filter(site == "CPVT")
+
+data_ILMseedlings <- data_seedlings %>% filter(site == "ILM")
+
+data_CPVTliveadults <- data_liveadults %>% filter(site == "CPVT")
+
+data_ILMliveadults <- data_liveadults %>% filter(site == "ILM")
+```
+
+```{r ordBuilder, echo=FALSE}
+ordSetup <- function(ordTrtData, trt_var, trt_0, trt_1){
+  colnames(ordTrtData)[colnames(ordTrtData) == 'response'] <- 'numID'
+  for (i in 1:nrow(ordTrtData)) {
+    ordTrtData$numID[i] <- i
+  }
+  colnames(ordTrtData)[colnames(ordTrtData) == trt_var] <- 'trt'
+  for (i in 1:nrow(ordTrtData)) {
+    if (ordTrtData$trt[i] == trt_0) ordTrtData$trt[i] <- 0
+    if (ordTrtData$trt[i] == trt_1) ordTrtData$trt[i] <- 1
+  }
+  return(ordTrtData)
+}
+  
+ord_er <- function(orddata){
+  dim1<-metaMDS(orddata, k = 1, trymax = 100)
+  s1<-dim1[[22]]
+  dim2<-metaMDS(orddata,k=2,trymax = 100)
+  s2<-dim2[[22]]
+  dim3<-metaMDS(orddata,k=3,trymax = 100)
+  s3<-dim3[[22]]
+  ord<-metaMDS(orddata,k=2)
+  return(ord)
+}
+ 
+  #NMDS plot colors
+colvec <- c("green4", "blue4")
+pchvec <- c(0, 1)
+
+plainNMDS <- function(orddata, trt_var) {
+  plot(ord, type = "n")
+  with(orddata, points(ord, display = "sites", col = colvec, pch = pchvec, cex=1.5)) 
+  legend("topleft",legend = c(trt_0, trt_1), col = colvec, pch = pchvec, bty = "n", pt.cex = 1.5, cex = 1, text.col = "black", horiz = F, inset = c(0.01))
+}
+
+plot_ano <- function(){
+  ano <-  anosim(orddata, trt$trt, distance = "bray", permutations = 9999)
+  plot(ano)
+}
+
+NMDS_centroids <- function(ord){
+  data.scores <- as.data.frame(scores(ord)$sites)
+  data.scores$trt <- trt$trt
+  
+  ## this next section is how to make connected centroids
+  cent <- aggregate(cbind(NMDS1, NMDS2) ~ trt, data = data.scores, FUN = mean)
+  
+  segs <- merge(data.scores, setNames(cent, c('trt','oNMDS1','oNMDS2')),
+                by = 'trt', sort = FALSE)
+  
+  all.trt.nmds <- ggplot(data.scores, aes(x = NMDS1, y = NMDS2)) + 
+    geom_point(size = 3, aes( shape = factor(trt), colour = factor(trt))) + 
+    geom_segment(data = segs,
+                 mapping = aes(xend = oNMDS1, yend = oNMDS2)) + 
+    geom_point(data = cent, size = 5, colour=colvec, shape=pchvec) +
+    scale_shape_manual(values=c(0,1,2))+ #can add Xlim and Ylim here if needed
+    theme(axis.text.y = element_text(colour = "black", size = 12, face = "bold"),
+          axis.text.x = element_text(colour = "black", face = "bold", size = 12), 
+          legend.text = element_text(size = 12, face ="bold", colour ="black"), 
+          legend.position = "none", 
+          axis.title.x = element_text(face = "bold", size = 14, colour = "black"),
+          axis.title.y = element_text(face = "bold", size = 14, colour = "black"),
+          panel.background = element_blank(), 
+          panel.border = element_rect(colour = "black", fill = NA, linewidth = 1.2))+
+    labs(x = "NMDS1", y = "NMDS2")  + 
+    scale_colour_manual(values = colvec)
+  all.trt.nmds
+}
+
+NMDS_ellipses <- function(ord){
+  plot(ord$points, col = colvec)
+  # draw dispersion ellipses around data points
+  ordiellipse(ord, trt$trt, display = "sites", kind = "sd", label = T)
+}
+
+```
+
+```{r settingOrd, echo=TRUE, warning=FALSE, results='hide', message=FALSE, fig.keep='all', fig.show="hold", out.width="50%"}
+#associate trees NMDS builder
+#note: columns 76 through 103 are the trees presence/absence data
+#MAKE CHANGES HERE
+ordTrtData <- data_CPVTliveadults
+trt_var <- "retention_strategy"
+trt_0 <- "healthy"
+trt_1 <- "unhealthy"
+#END OF CHANGES
+
+ordTrtData <- ordSetup(ordTrtData, trt_var, trt_0, trt_1)
+trt <- ordTrtData %>% select("numID", "trt")
+orddata <- ordTrtData[c(1, 76:103)]
+ord <- invisible(ord_er(orddata))
+plot_ano
+plainNMDS(ord)
+NMDS_centroids(ord)
+NMDS_ellipses(ord)
+
+#CHANGES HERE
+ordTrtData <- data_ILMliveadults
+trt_var <- "retention_strategy"
+trt_0 <- "healthy"
+trt_1 <- "unhealthy"
+#END OF CHANGES
+
+ordTrtData <- ordSetup(ordTrtData, trt_var, trt_0, trt_1)
+trt <- ordTrtData %>% select("numID", "trt")
+orddata <- ordTrtData[c(1, 76:103)]
+ord <- invisible(ord_er(orddata))
+plot_ano
+plainNMDS(ord)
+NMDS_centroids(ord)
+NMDS_ellipses(ord)
+
+```
+
+```{r seedlingsVsAdultsNMDS, echo=TRUE, warning=FALSE, results='hide', message=FALSE, fig.keep='all', fig.show="hold", out.width="50%"}
+
+#CHANGES HERE
+ordTrtData <- data_CPVT
+trt_var <- "seedling_or_adult"
+trt_0 <- "Seedling"
+trt_1 <- "Adult"
+#END OF CHANGES
+
+ordTrtData <- ordSetup(ordTrtData, trt_var, trt_0, trt_1)
+trt <- ordTrtData %>% select("numID", "trt")
+orddata <- ordTrtData[c(1, 76:103)]
+ord <- invisible(ord_er(orddata))
+plot_ano
+plainNMDS(ord)
+NMDS_centroids(ord)
+NMDS_ellipses(ord)
+
+#CHANGES HERE
+ordTrtData <- data_ILM
+trt_var <- "seedling_or_adult"
+trt_0 <- "Seedling"
+trt_1 <- "Adult"
+#END OF CHANGES
+
+ordTrtData <- ordSetup(ordTrtData, trt_var, trt_0, trt_1)
+trt <- ordTrtData %>% select("numID", "trt")
+orddata <- ordTrtData[c(1, 76:103)]
+ord <- invisible(ord_er(orddata))
+plot_ano
+plainNMDS(ord)
+NMDS_centroids(ord)
+NMDS_ellipses(ord)
+```
+
+```{r riparianVsUpland, echo=TRUE, warning=FALSE, results='hide', message=FALSE, fig.keep='all', fig.show="hold", out.width="50%"}
+#CHANGES HERE
+ordTrtData <- data
+trt_var <- "riparian_or_upland"
+trt_0 <- "Riparian"
+trt_1 <- "Upland"
+#END OF CHANGES
+
+ordTrtData <- ordSetup(ordTrtData, trt_var, trt_0, trt_1)
+trt <- ordTrtData %>% select("numID", "trt")
+orddata <- ordTrtData[c(1, 76:103)]
+ord <- invisible(ord_er(orddata))
+plot_ano
+plainNMDS(ord)
+NMDS_centroids(ord)
+NMDS_ellipses(ord)
+```

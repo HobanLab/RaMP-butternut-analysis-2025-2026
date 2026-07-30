@@ -1,0 +1,169 @@
+---
+title: "Preliminary maps + scatterplots"
+author: "Catherine dell'Olio"
+date: "2025-10-21"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r datasplitter, echo=FALSE}
+library(dplyr)
+setwd("~/dataAnalysisCfd")
+data <- read.csv("datasheet.csv")
+
+data_seedlings <- data %>% filter(seedling_or_adult == "Seedling")
+average_densi <- numeric(nrow(data_seedlings))
+mowing <- numeric(nrow(data_seedlings))
+vole_nibbling <- numeric(nrow(data_seedlings))
+deer_browse <- numeric(nrow(data_seedlings))
+deer_rub <- numeric(nrow(data_seedlings))
+rabbit_browse <- numeric(nrow(data_seedlings))
+data_seedlings <- cbind(data_seedlings, average_densi, mowing, vole_nibbling, deer_browse, deer_rub, rabbit_browse)
+for (i in 1:nrow(data_seedlings)) {
+  data_seedlings$average_densi[i] <- 1.04 * mean(c(data_seedlings$densi_n[i], data_seedlings$densi_s[i], data_seedlings$densi_e[i], data_seedlings$densi_w[i]))
+}
+data_seedlings[grep('Having been mowed in the past', data_seedlings$seedling_damage), "mowing"] <- 1
+data_seedlings[grep("Vole (nibbling on the bark)", data_seedlings$seedling_damage), "vole_nibbling"] <- 1
+data_seedlings[grep("Deer browse", data_seedlings$seedling_damage), "deer_browse"] <- 1
+data_seedlings[grep("Deer rub", data_seedlings$seedling_damage), "deer_rub"] <- 1
+data_seedlings[grep("Rabbit browse", data_seedlings$seedling_damage), "rabbit_browse"] <- 1
+
+data_adults <- data %>% filter(seedling_or_adult == "Adult")
+
+data_liveseedlings <- data_seedlings %>% filter(seedling_dead_or_alive == "Alive")
+for (i in 2017:2025){
+  nam <- paste("data_seedlings", i, sep = "")
+  assign(nam, data_seedlings %>% filter(seedling_germ_yr == {{i}}))
+}
+
+data_liveadults <- data_adults %>% filter(adult_dead_or_alive == "Alive")
+
+retention_strategy <- numeric(nrow(data_liveadults))
+data_liveadults <- cbind(data_liveadults, retention_strategy)
+
+for (i in 1:nrow(data_liveadults)) {
+  if (is.na(data_liveadults$live_adult_canker_base[i]))
+    data_liveadults$live_adult_canker_base[i] <- 0
+}
+
+for(i in 1:nrow(data_liveadults)){
+  if ((data_liveadults$adult_percent_live_canopy[i] > 70  &
+      data_liveadults$live_adult_canker_base[i] < 20) |
+      (data_liveadults$adult_percent_live_canopy[i] >= 50 &
+      data_liveadults$live_adult_canker_base[i] == 0))
+      data_liveadults$retention_strategy[i] <- "healthy"
+      else data_liveadults$retention_strategy[i] <- "unhealthy"
+}
+
+data_ILM <- data %>% filter(site == "ILM")
+data_ILMhybridvis <- data_ILM %>% filter(hybrid_visibility == "Y")
+
+data_CPVT <- data %>% filter(site == "CPVT")
+data_CPVThybridvis <- data_CPVT %>% filter(hybrid_visibility == "Y")
+
+data_CPVTadults <- data_adults %>% filter(site == "CPVT")
+
+data_ILMadults <- data_adults %>% filter(site == "ILM")
+
+data_CPVTseedlings <- data_seedlings %>% filter(site == "CPVT")
+
+data_ILMseedlings <- data_seedlings %>% filter(site == "ILM")
+
+data_CPVTliveadults <- data_liveadults %>% filter(site == "CPVT")
+
+data_ILMliveadults <- data_liveadults %>% filter(site == "ILM")
+
+```
+
+```{r charts, echo=FALSE, warning=FALSE, results='hide', message=FALSE}
+#Making charts
+library(ggplot2)
+
+#spatial visualization
+map <- function(data, colorz, legend_yn, title)
+  ggplot(data, aes(gps_n, gps_w)) +
+  geom_point(aes(color = {{ colorz }}), show.legend = legend_yn) +
+  ggtitle(title)
+
+histogram <- function(data, metric, binzwidth, title)
+  ggplot(data, aes({{ metric }})) +
+  geom_histogram(bins = binzwidth) +
+  ggtitle(title)
+
+scatterplot <- function(data, x, y, title)
+  ggplot(data, aes({{ x }}, {{ y }})) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  ggtitle(title)
+```
+
+```{r maps, echo=FALSE, warning=FALSE, results='hide', message=FALSE, fig.keep='all', fig.show="hold", out.width="50%"}
+
+map(data_CPVTliveadults, retention_strategy, TRUE, "CPVT live adults")
+map(data_ILMliveadults, retention_strategy, TRUE, "ILM live adults")
+map(data_ILMliveadults, live_adult_purdue_canker_rating, TRUE, "ILM adults canker severity")
+map(data_ILMliveadults, live_adult_canker_base, TRUE, "ILM adults canker severity")
+
+map(data_CPVTseedlings, "orange4", FALSE, "CPVT seedlings")
+map(data_ILMseedlings, "orange4", FALSE, "ILM seedlings")
+map(data_CPVTseedlings, height_ft, TRUE, "CPVT seedlings")
+map(data_ILMseedlings, height_ft, TRUE, "ILM seedlings")
+map(data_ILMseedlings, seedling_canker_base, TRUE, "ILM seedlings by canker")
+map(data_CPVTseedlings, seedling_canker_base, TRUE, "CPVT seedlings by canker")
+map(data_ILMseedlings, seedling_germ_yr, TRUE, "ILM seedlings by age")
+map(data_CPVTseedlings, seedling_germ_yr, TRUE, "CPVT seedlings by age")
+```
+These are annoying because I still need to convert all the NA values (gray) to 0 counts, which would greatly improve the seedling maps, but the idea is there. There are definitely spatial patterns in health metrics for both butternut seedlings and adults.  At ILM, you can see even here small clusters of healthier adults in northwestern edge of the property, and interspersed on western side of property.  Obviously doing this in actual mapping software would be ideal but R does a good job for this.
+
+CPVT live adults by retention strategy  → healthier adults have a large cluster in the northern part of the site, and two smaller clusters found on the interior edges of the larger groups of adults.
+Also mapped live adults colorcoded by their Purdue canker ranking and canker percentage at the base, and predictably patterns were mostly the same (as all these metrics identify, very broadly, trees that are more healthy and those that are not.  Still thinking about which ones are best to definitively judge butternuts to determine which are actually the healthiest, but I am leaning towards options that allow me to weigh both canker and canopy, but open to ideas.
+
+```{r misc, echo=FALSE, warning=FALSE, results='hide', message=FALSE, fig.keep='all', fig.show="hold", out.width="50%"}
+
+histogram(data_CPVTliveadults, live_adult_canker_base, 20, "CPVT live adults basal canker")
+
+scatterplot(data_liveadults, live_adult_canker_base, live_adult_canker_1st9ft, "Canker at base vs at 1st9ft")
+scatterplot(data_liveadults, live_adult_canker_base, live_adult_canker_1stlivebranch, "Canker at base vs to first live branch")
+
+```
+
+```{r densiometers, echo=FALSE, warning=FALSE, results='hide', message=FALSE, fig.keep='all', fig.show="hold", out.width="25%"}
+scatterplot(data_seedlings, densi_s, seedling_canker_base, "Canker at base vs densiometer south")
+scatterplot(data_seedlings, densi_n, seedling_canker_base, "Canker at base vs densiometer north")
+scatterplot(data_seedlings, densi_e, seedling_canker_base, "Canker at base vs densiometer east")
+scatterplot(data_seedlings, densi_w, seedling_canker_base, "Canker at base vs densiometer west")
+scatterplot(data_seedlings, average_densi, seedling_canker_base, "Canker at base vs av. densiometer")
+
+scatterplot(data_seedlings, densi_s, seedling_percent_live_canopy, "Canker at base vs densiometer south")
+scatterplot(data_seedlings, densi_n, seedling_percent_live_canopy, "Canker at base vs densiometer north")
+scatterplot(data_seedlings, densi_e, seedling_percent_live_canopy, "Canker at base vs densiometer east")
+scatterplot(data_seedlings, densi_w, seedling_percent_live_canopy, "Canker at base vs densiometer west")
+scatterplot(data_seedlings, average_densi, seedling_percent_live_canopy, "Canker at base vs av. densiometer")
+```
+Sorry for the six hundred graphs here---the point of showing them is kind of that there is a whole lot of nothing in these relationships between light and canker/canopy for seedlings.
+None of the densiometer readings seem to be showing much relationship to canker load
+
+```{r overall_densi, echo=FALSE, warning=FALSE, fig.keep='all', fig.show='hold', out.width="50%"}
+scatterplot(data_seedlings, average_densi, height_ft, "Height vs av. densiometer") + facet_wrap( ~ seedling_germ_yr)
+scatterplot(data_seedlings, average_densi, basal_diameter_mm, "Basal diameter vs av. densiometer") + facet_wrap(~ seedling_germ_yr)
+```
+Neither metric of growth here is related to light conditions---seedlings are not putting on more height or weight in higher light conditions. I am wondering if this could be interacting with damage---it's possible that butternuts in more open, sunny areas are also more vulnerable to damage that stunts their growth.
+
+```{r densi_germyr, echo=FALSE, warning=FALSE, fig.keep='all', fig.show='hold', out.width="50%"}
+scatterplot(data_seedlings, average_densi, seedling_germ_yr, "Germ yr vs densi")
+scatterplot(data_ILMseedlings, average_densi, seedling_germ_yr, "Germ yr vs densi ILM")
+scatterplot(data_CPVTseedlings, average_densi, seedling_germ_yr, "Germ yr vs densi CPVT")
+```
+There is a gap, clearer in CPVT---there are few to no older seedlings in lower light conditions, which might indicate some survivorship bias.
+
+Further directions: now that I have figured out how to separate damage types, would love to see how different types of damage are affecting the wellbeing of these trees.  
+Also interested in the spatial patterns we're already getting a whiff of.  
+I also looked into the light/canker and light/canopy relationship a bunch in seedlings but not yet in adults, where the different canopy classes would make that a categorical comparison, but still answering some similar questions.
+I have held off exploring anything with the hybrid characters (though separated out a datasheet with the ones where they were visible, in case I do run any analyses looking at that) because I'm not sure how best to do that when we are still waiting for the genotype data.  We can definitely circle back to this after that data is available.
+Would also like to separate out some of the more unique trees---for example, ones with very high canker area and also very full canopies, and see if there are any similarities in these trees.

@@ -1,0 +1,59 @@
+---
+title: "25_10_23_Kolmogorov-SmirnovTesting"
+author: "Catherine dell'Olio"
+date: "2025-10-23"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE, warning=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(repos=structure(c("https://cloud.r-project.org", "http://www.stats.ox.ac.uk/pub/RWin" ), .Names = c("CRAN", "CRANextra")))
+```
+
+The goal of this project is to determine if the distributions of key variables in our 08_15 Butternut Health Assessment are in similar distributions at two key sites (ILM and CPVT).  Specifically, we will see if the spread of:
+- dbh (adults)
+- height (adults and seedlings)
+- canker at base (adults and seedlings)
+- canker to 1st live main branch for adults
+- girdle (adults and seedlings, CPVT vs ILM)
+- canker on stem of seedlings
+- percent live canopy (seedlings and adults, CPVT vs ILM)
+- 
+...follow similar patterns
+```{r datasplitter_packages, include=FALSE, echo=FALSE, warning=FALSE}
+install.packages("dplyr")
+library(dplyr)
+setwd("~/dataAnalysisCfd")
+source('dataSplitter.R')
+
+install.packages("dgof")
+library("dgof")
+```
+
+```{r ks tests, echo=FALSE, warning=FALSE, fig.keep='all', fig.show='hold', out.width="50%"}
+#dropping #20 because he is turning the rest of the dbh's into character data
+ks <- function(s1, s2, title){
+  ks_results <- ks.test(s1, s2)
+  plot(ecdf(s1), xlim = range(c(s1, s2)), col = "blue", main = title)
+  plot(ecdf(s2), add = TRUE, lty = "dashed", col = "red")
+  title(sub= paste0("K-S Statistic = ", round(ks_results$statistic, 3)), line=2)
+}
+
+ks(data_CPVTadults$dbh_cm, data_ILMadults$dbh_cm, "DBH CPVT(blue) vs ILM(red)")
+ks(data_CPVTadults$height_ft, data_ILMadults$height_ft, "Height of adults CPVT(blue) vs ILM(red)")
+ks(data_CPVTliveseedlings$height_ft, data_ILMliveseedlings$height_ft, "Height of live seedlings CPVT(blue) vs ILM(red)")
+ks(data_CPVTliveadults$live_adult_canker_base, data_ILMliveadults$live_adult_canker_base, "Live adult canker at base, CPVT (blue) vs ILM (red)")
+ks(data_CPVTliveseedlings$seedling_canker_base, data_ILMliveseedlings$seedling_canker_base, "Seedling canker at base, CPVT (blue) vs ILM (red)")
+ks(data_CPVTliveadults$live_adult_canker_1stlivebranch, data_ILMliveadults$live_adult_canker_1stlivebranch, "Live adult canker to first live branch, CPVT (blue) vs ILM (red)")
+ks(data_CPVTliveadults$live_adult_girdle, data_ILMliveadults$live_adult_girdle, "Adult girdle, CPVT (blue) vs ILM (red)")
+ks(data_CPVTliveseedlings$seedling_girdle, data_ILMliveseedlings$seedling_girdle, "Seedling girdle, CPVT (blue) vs ILM (red)")
+ks(data_CPVTliveseedlings$seedling_canker_stem, data_ILMliveseedlings$seedling_canker_stem, "Seedling canker at stem, CPVT (blue) vs ILM (red)")
+ks(data_CPVTliveadults$adult_percent_live_canopy, data_ILMliveadults$adult_percent_live_canopy, "Adult live canopy at CPVT (blue) and ILM (red)")
+ks(data_CPVTliveseedlings$seedling_percent_live_canopy, data_ILMliveseedlings$seedling_percent_live_canopy, "Seedling live canopy at CPVT (blue) and ILM (red)")
+```
+Perhaps slightly iffy on Adult live canopy where p=0.084, but otherwise, these distributions are pretty similar across the two sites!
+
+Thank you for your time.
