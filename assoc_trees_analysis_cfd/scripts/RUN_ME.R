@@ -28,6 +28,7 @@ source("STEP_2_species_clustering.R")
 
 #This is when we create three brazillion plots to demonstrate the way the data looks
 df <- impact_TOTAL
+response <- df_wo_boundaries$adult_percent_live_canopy
 #Brace yourself; this will produce, conservatively, 9.6 billion plots
 source("STEP_3_initial_data_familiarization.R")
 #It's worth going through all of this pretty carefully to really understand the distribution and behavior of the data.
@@ -36,7 +37,6 @@ source("STEP_3_initial_data_familiarization.R")
 #Now it is time to determine a model
 source("STEP_4_determining_a_model.R")
 #IMPORTANT NOTE: this creates a version of our data, where the response variables fit the (0,1) range specified by the beta distribution so we can use beta regression, by transforming 0 and 1 values to 0.1 and 0.99.  So note that df is now df_without_boundaries (those boundary values being 0 and 1).  I have this specified below as "response", which we will need in step 5 anyways
-response <- df_wo_boundaries$adult_percent_live_canopy
 modelSelection(df_wo_boundaries$adult_percent_live_canopy)
 #for our models based on impact_TOTAL (total impact of all trees, alive or dead, we find that alternate-leaf dogwood is the best explainer of percent live canopy (K=3, AICc = -26.49).
 
@@ -86,6 +86,7 @@ moran_plots(chosen_model, response)
 #now I will shift into looking a different response live_adult_girdle (back to step 4)
 #just a reminder, we are still looking at impact_TOTAL
 response <- df_wo_boundaries$live_adult_girdle
+source("STEP_3_initial_data_familiarization.R")
 modelSelection(df_wo_boundaries$live_adult_girdle)
 #for our models based on impact_TOTAL (total impact of all trees, alive or dead, we find that bitternut_hickory + american elm + alternate leaf dogwood is the best explainer of percent girdle (K=5, AICc = -6.42), but that butternut is a large player as well.
 chosen_model <- glmmTMB(adult_percent_live_canopy ~ bitternut_hickory+american_elm+`alternate-leaf_dogwood`, data = df_wo_boundaries, family = beta_family(link = "logit"))
