@@ -27,14 +27,14 @@ morans_i_test <- function(chosen_model, df){
 
 moran_plots <- function(chosen_model, response){
   #credit to https://www.paulamoraga.com/book-spatial/spatial-autocorrelation.html
-  moran_testMC <- moran.mc(df$live_adult_girdle, nbw, nsim=999)
+  moran_testMC <- moran.mc(response, nbw, nsim=999)
   moran_testMC
   hist(moran_testMC$res)
   abline(v = moran_testMC$statistic, col = "red")
   
-  moran.plot(df$live_adult_girdle, nbw)
+  moran.plot(response, nbw)
   
-  lmoran <- localmoran(df$adult_percent_live_canopy, nbw, alternative = "greater")
+  lmoran <- localmoran(response, nbw, alternative = "greater")
   head(lmoran)
   df$lmI <- lmoran[, "Ii"] # local Moran's I
   df$lmZ <- lmoran[, "Z.Ii"] # z-scores
