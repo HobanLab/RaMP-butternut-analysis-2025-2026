@@ -1,0 +1,7 @@
+"County or Parish"|"VT007"|"Chittenden"|397300|"12311"|"628529"
+"MLRA"|"142"|"St. Lawrence-Champlain Plain"|272611|"12311"|"628530"
+"MLRA"|"143"|"Northeastern Mountains"|124689|"12311"|"628531"
+"MLRA Soil Survey Area"|"NE-PAS"|"Paul Smiths, New York"|272611|"12311"|"628532"
+"MLRA Soil Survey Area"|"NE-STJ"|"Saint Johnsbury, Vermont"|124689|"12311"|"628533"
+"Rainfall Factor Area (USLE)"|"80"|"Rainfall Factor"||"12311"|"628534"
+"State or Territory"|"VT"|"Vermont"|397300|"12311"|"628535"

@@ -1,3 +1,5 @@
+#Catherine dell'Olio
+#Soil analysis
 
 #### Loading libraries and relevant data ####
 
@@ -13,14 +15,23 @@ library(raster) #to plot rasters
 library(rstatix) #to run the Games-Howell Test
 library(ggnewscale) #to be able to assign different colors to different layered rasters
 
-setwd("~/wss_aoi_2026-02-25_14-37-42/wss_aoi_2026-02-25_14-37-42/spatial")
+#soil data brought to you by https://websoilsurvey.nrcs.usda.gov/app/WebSoilSurvey.aspx
+setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data/wss_aoi_2026_ILM/spatial")
 soil_map_ILM <- st_read("soilmu_a_aoi.shp")
 soil_map_ILM_transformed <- st_transform(soil_map_ILM, crs = 26918)
 plot(soil_map_ILM)
-soil_categories_ILM <- st_join(ILM_fixed_field_data_processed_sf_transformed, soil_map_ILM_transformed, join = st_intersects)
+#note that the WSS system labels the soil categories as "MUSYM" and so that column is what denotes soil category for each butternut, determined by where that butternut's point geometry intersects with the soil polygons
+ILM_data_w_soils <- st_join(ILM_fixed_field_data_processed_sf_transformed, soil_map_ILM_transformed, join = st_intersects)
 
-ILM_ppp_as_sf <- st_sf(geometry = ILM_ppp)
-soil_categories_null_ILM <- st_join(ILM_ppp, soil_map_ILM_transformed, join = st_intersects)
+win <- as.owin(ILM_fixed_field_data_processed_box) #turning the box into a window
+ILM_ppp <- as.ppp(st_coordinates(ILM_fixed_field_data_processed_sf), W = win) #creating the poisson point pattern for LM
+ILM_ppp <- unmark(ILM_ppp)
+ILM_ppp_df <- data.frame(x = ILM_ppp$x, y = ILM_ppp$y)
+ILM_ppp_sf <- st_as_sf(ILM_ppp_df, coords = c("x", "y"), crs = 4326)
+ILM_ppp_sf_transformed <- st_transform(ILM_ppp_sf, crs = 26918)
+null_ILM_data_w_soils <- st_join(ILM_ppp_sf_transformed, soil_map_ILM_transformed, join = st_intersects)
+
+barplot(ILM_data_w_soils, MUSYM, "Soil for ILM butternuts")
 
 barplot(data_CPVT, soil_type, "Soil at CPVT")
 barplot(data_CPVTseedlings, soil_type, "Soil at CPVT")
@@ -40,62 +51,6 @@ boxplot(data_CPVTliveadults, soil_type, live_adult_purdue_canopy_ranking, "Purdu
 
 map(data_ILM, soil_type, TRUE, "soils at ILM")
 map(data_CPVT, soil_type, TRUE, "soils at CPVT")
-
-tm_shape(ILM_polygon) + 
-  tm_polygons(fill = "bisque", col = "bisque") +
-  tm_shape(trails_ILM) +
-  tm_polygons(fill = "burlywood4", col = "burlywood4") +
-  tm_shape(ILM_fixed_field_data_processed_sf) +
-  tm_dots(fill = "age_clark") +
-  tm_title("ILM butternuts (green) and ILM trails (brown)") +
-  tm_grid() +
-  tm_graticules()
-
-tm_shape(ILM_polygon) + 
-  tm_polygons(fill = "bisque", col = "bisque") +
-  tm_shape(trails_ILM) +
-  tm_polygons(fill = "burlywood4", col = "burlywood4") +
-  tm_shape(ILM_fixed_field_data_processed_sf) +
-  tm_dots("age_clark", fill.scale = tm_scale_continuous(
-    values = "nightfall",
-    values.scale = 2, 
-    limits = c(1920 , 2025), 
-    ticks = c(1920, 1940, 1960, 1980, 2000, 2020), 
-    labels = c("1920", "1940", "1960", "1980", 
-               "2000", "2020"), 
-    outliers.trunc = c(TRUE, TRUE)),
-    fill.legend = tm_legend(title = "Germ. year")) +
-  tm_title("Butternuts by age with site trails (brown)") +
-  tm_grid() +
-  tm_graticules()
-
-tm_shape(CPVT_polygon) + 
-  tm_polygons(fill = "bisque", col = "bisque") +
-  tm_shape(trails_CPVT) +
-  tm_polygons(fill = "burlywood4", col = "burlywood4") +
-  tm_shape(CPVT_fixed_field_data_processed_sf) +
-  tm_dots("age_clark", fill.scale = tm_scale_continuous(values = "scico.roma")) +
-  tm_title("CPVT butternuts (green) and CPVT trails (brown)") +
-  tm_grid() +
-  tm_graticules()
-
-tm_shape(CPVT_polygon) + 
-  tm_polygons(fill = "bisque", col = "bisque") +
-  tm_shape(trails_CPVT) +
-  tm_polygons(fill = "burlywood4", col = "burlywood4") +
-  tm_shape(CPVT_fixed_field_data_processed_sf) +
-  tm_dots("age_clark", fill.scale = tm_scale_continuous(
-    values = "nightfall",
-    values.scale = 2, 
-    limits = c(1920 , 2025), 
-    ticks = c(1920, 1940, 1960, 1980, 2000, 2020), 
-    labels = c("1920", "1940", "1960", "1980", 
-               "2000", "2020"), 
-    outliers.trunc = c(TRUE, TRUE)),
-    fill.legend = tm_legend(title = "Germ. year")) +
-  tm_title("Butternuts by age with site trails (brown)") +
-  tm_grid() +
-  tm_graticules()
 
 #fixing column names to be able to merge dataframes
 SD_fixed_field_data_processed_terrain_dist_soils <- SD_fixed_field_data_processed_terrain_dist_soils %>%

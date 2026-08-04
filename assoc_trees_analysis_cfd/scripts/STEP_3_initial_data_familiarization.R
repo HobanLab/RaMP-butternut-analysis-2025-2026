@@ -122,6 +122,15 @@ plot(live_adult_girdle ~ red_cedar,
      xlab = 'Red cedar impact coefficient',
      ylab = 'Girdle % of canker')
 
+plot(adult_percent_live_canopy ~ `alternate-leaf_dogwood`,
+     data = df,
+     xlab = 'Alt. leaf dogwood impact coefficient',
+     ylab = 'Percent live canopy')
+plot(live_adult_girdle ~ `alternate-leaf_dogwood`,
+     data = df,
+     xlab = 'Alt. leaf dogwood impact coefficient',
+     ylab = 'Girdle % of canker')
+
 plot(adult_percent_live_canopy ~ basswood,
      data = df,
      xlab = 'Basswood impact coefficient',
@@ -170,10 +179,14 @@ plot(live_adult_girdle ~ sugar_maple,
 #again, looks like an upward trend, but there are two outliers that might be weighting.  Strange because we would have expected sugar maples to create litter that decreases girdling, though they do grow thick enough that they could be influencing local humidity
 
 plot(adult_percent_live_canopy ~ bitternut_hickory,
-     data = df)
+     data = df,
+     xlab = 'Bitternut hickory impact coefficient',
+     ylab = 'Percent live canopy')
 #could be a downward trend but very slight
 plot(live_adult_girdle ~ bitternut_hickory,
-     data = df)
+     data = df,
+     xlab = 'Bitternut hickory impact coefficient',
+     ylab = 'Girdle % of canker')
 #could be a downward trend but very slight
 
 plot(adult_percent_live_canopy ~ butternut,

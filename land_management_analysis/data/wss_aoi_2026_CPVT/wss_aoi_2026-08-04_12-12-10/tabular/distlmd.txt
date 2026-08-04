@@ -1,0 +1,3 @@
+"Non-MLRA Soil Survey Area"|"VT007"|"Chittenden County, Vermont"||03/01/1969 00:00:00|"certified, all components"|09/12/2025 18:27:02|"Exported as part of 2025 ASR. No major changes were made to the data. 
+
+Precheck validations run with acceptable results.  Certified for release to Soil Data Mart/Web Soil Survey."|"12311"|"93297"|"93198"

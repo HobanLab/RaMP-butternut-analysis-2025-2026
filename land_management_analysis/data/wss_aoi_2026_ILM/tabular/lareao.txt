@@ -1,0 +1,4 @@
+"County or Parish"|"VT013"|"Grand Isle"|124400|"12314"|"628550"
+"MLRA"|"142"|"St. Lawrence-Champlain Plain"|124400|"12314"|"628551"
+"Rainfall Factor Area (USLE)"|"75"|"Rainfall Factor"||"12314"|"628552"
+"State or Territory"|"VT"|"Vermont"|124400|"12314"|"628553"

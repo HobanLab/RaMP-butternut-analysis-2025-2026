@@ -739,3 +739,61 @@ anova(PPM0, PPM1, test="LRT")
 #plotting the alternative model
 plot(effectfun(PPM1, "dist_near_trails_fixed_box_CPVT_corrected_im", se.fit = TRUE), main = "Distance to trails of Charlotte Park",
      ylab = "Butternut Trees", xlab = "Distance to trails", legend = FALSE)
+
+#Butternuts by age
+#Plotting the butternuts and their distance to trails when they are colored by age, to see if age has any effect on their response to open areas
+tm_shape(ILM_polygon) + 
+  tm_polygons(fill = "bisque", col = "bisque") +
+  tm_shape(trails_ILM) +
+  tm_polygons(fill = "burlywood4", col = "burlywood4") +
+  tm_shape(ILM_fixed_field_data_processed_sf) +
+  tm_dots(fill = "age_clark") +
+  tm_title("ILM butternuts (green) and ILM trails (brown)") +
+  tm_grid() +
+  tm_graticules()
+
+tm_shape(ILM_polygon) + 
+  tm_polygons(fill = "bisque", col = "bisque") +
+  tm_shape(trails_ILM) +
+  tm_polygons(fill = "burlywood4", col = "burlywood4") +
+  tm_shape(ILM_fixed_field_data_processed_sf) +
+  tm_dots("age_clark", fill.scale = tm_scale_continuous(
+    values = "nightfall",
+    values.scale = 2, 
+    limits = c(1920 , 2025), 
+    ticks = c(1920, 1940, 1960, 1980, 2000, 2020), 
+    labels = c("1920", "1940", "1960", "1980", 
+               "2000", "2020"), 
+    outliers.trunc = c(TRUE, TRUE)),
+    fill.legend = tm_legend(title = "Germ. year")) +
+  tm_title("Butternuts by age with site trails (brown)") +
+  tm_grid() +
+  tm_graticules()
+
+tm_shape(CPVT_polygon) + 
+  tm_polygons(fill = "bisque", col = "bisque") +
+  tm_shape(trails_CPVT) +
+  tm_polygons(fill = "burlywood4", col = "burlywood4") +
+  tm_shape(CPVT_fixed_field_data_processed_sf) +
+  tm_dots("age_clark", fill.scale = tm_scale_continuous(values = "scico.roma")) +
+  tm_title("CPVT butternuts (green) and CPVT trails (brown)") +
+  tm_grid() +
+  tm_graticules()
+
+tm_shape(CPVT_polygon) + 
+  tm_polygons(fill = "bisque", col = "bisque") +
+  tm_shape(trails_CPVT) +
+  tm_polygons(fill = "burlywood4", col = "burlywood4") +
+  tm_shape(CPVT_fixed_field_data_processed_sf) +
+  tm_dots("age_clark", fill.scale = tm_scale_continuous(
+    values = "nightfall",
+    values.scale = 2, 
+    limits = c(1920 , 2025), 
+    ticks = c(1920, 1940, 1960, 1980, 2000, 2020), 
+    labels = c("1920", "1940", "1960", "1980", 
+               "2000", "2020"), 
+    outliers.trunc = c(TRUE, TRUE)),
+    fill.legend = tm_legend(title = "Germ. year")) +
+  tm_title("Butternuts by age with site trails (brown)") +
+  tm_grid() +
+  tm_graticules()

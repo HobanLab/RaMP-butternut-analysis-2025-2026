@@ -1,0 +1,3 @@
+"Non-MLRA Soil Survey Area"|"VT013"|"Grand Isle County, Vermont"||03/01/1956 00:00:00|"certified, all components"|09/08/2025 18:34:44|"Exported as part of 2025 ASR. No major changes were made to the data. 
+
+Precheck validations run with acceptable results.  Certified for release to Soil Data Mart/Web Soil Survey."|"12314"|"93300"|"93201"
