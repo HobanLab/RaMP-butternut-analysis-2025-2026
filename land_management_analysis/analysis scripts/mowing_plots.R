@@ -3,25 +3,21 @@
 #This script creates the plots comparing seedlings with and without mowing damage.
 #This was intended to help land managers understand the impacts of mowing on butternut seedlings.  Do the benefits (increased light availability for butternut regeneration) outweigh the costs (mowing down new growth in unprotected butternut seedlings?)
 
+library(EnvStats)
+
 #You will need the dataframe liveseedlings, which is a set of all living seedlings across two VT sites (ILM and CPVT)
-write.csv(data_liveseedlings, "data_liveseedlings.csv")
-setwd()
+#this should be populated from DataSplitter; alternatively, it can be uploaded from the CSV saved to this directory
+setwd("/land_management_analysis/data")
 data_liveseedlings <- read.csv("data_liveseedlings.csv")
 
+#plotting the height of seedlings that have sustained mowing damage (mowing = TRUE) against those that have not sustained any mowing damage (FALSE)
 ggplot(data = data_liveseedlings, aes(x = height_ft, y= mowing)) +
   geom_boxplot(alpha = 0, aes(color = mowing)) +
   geom_jitter(height = 0, alpha = 0.25, size = 0.5, width = 0.3) +
   stat_n_text() +
   labs(x = "Mowing damage seen", y ="Height of seedling (ft)", title = "Height of mowed and unmowed seedlings across two sites")
-library(EnvStats)
 
-
-s1 <- seedlings2022$height_ft[data_liveseedlings$mowing == TRUE]
-s2 <- seedlings2022$height_ft[data_liveseedlings$mowing == FALSE]
-#ks(s1, s2, "Mowing and height of seedlings")
-ks.test(s1, s2)
-boxplot(data_liveseedlings, mowing, seedling_germ_yr, "title")
-
+#of course, a big predictor of height for a seedling is age, so I separate the seedlings in our dataset by germination year so that I can make fair comparisons within age classes
 seedlings2020 <- data_liveseedlings %>% filter(seedling_germ_yr == 2020)
 seedlings2021 <- data_liveseedlings %>% filter(seedling_germ_yr == 2021)
 seedlings2022 <- data_liveseedlings %>% filter(seedling_germ_yr == 2022)
@@ -29,11 +25,21 @@ seedlings2023 <- data_liveseedlings %>% filter(seedling_germ_yr == 2023)
 seedlings2024 <- data_liveseedlings %>% filter(seedling_germ_yr == 2024)
 seedlings2025 <- data_liveseedlings %>% filter(seedling_germ_yr == 2025)
 
+#let's visualize the height data we have in each of these age-classes
+boxplot(seedlings2021, mowing, height_ft, "Height of 2021 seedings, mowed or unmowed")
+boxplot(seedlings2022, mowing, height_ft, "Height of 2022 seedings, mowed or unmowed")
+boxplot(seedlings2023, mowing, height_ft, "Height of 2023 seedings, mowed or unmowed")
+boxplot(seedlings2024, mowing, height_ft, "Height of 2024 seedings, mowed or unmowed")
+boxplot(seedlings2025, mowing, height_ft, "Height of 2025 seedings, mowed or unmowed")
+
+#statistically testing between these treatments (mowing damage and no mowing damage) for each individual age class using a KS test
+ks.test(seedlings2020$height_ft[data_liveseedlings$mowing == TRUE], seedlings2020$height_ft[data_liveseedlings$mowing == FALSE])
+ks.test(seedlings2021$height_ft[data_liveseedlings$mowing == TRUE], seedlings2021$height_ft[data_liveseedlings$mowing == FALSE])
+ks.test(seedlings2022$height_ft[data_liveseedlings$mowing == TRUE], seedlings2022$height_ft[data_liveseedlings$mowing == FALSE])
+ks.test(seedlings2023$height_ft[data_liveseedlings$mowing == TRUE], seedlings2023$height_ft[data_liveseedlings$mowing == FALSE])
+ks.test(seedlings2024$height_ft[data_liveseedlings$mowing == TRUE], seedlings2024$height_ft[data_liveseedlings$mowing == FALSE])
+ks.test(seedlings2025$height_ft[data_liveseedlings$mowing == TRUE], seedlings2025$height_ft[data_liveseedlings$mowing == FALSE])
+
+#plotting all of these age-classes on the same plot to demonstrate the finding that there is no pattern in height measurement between mowed and unmowed seedlings
 data_mowing <- data_liveseedlings %>% filter(seedling_germ_yr>2020)
 boxplot(data_mowing, mowing, height_ft, "Height of seedlings when mowed (blue) and unmowed (red)") + facet_wrap( ~ seedling_germ_yr) + labs( x = "Mowing damage", y = "Height of seedling (ft)") + theme_classic() + stat_n_text()
-
-boxplot(seedlings2021, mowing, height_ft, "title")
-boxplot(seedlings2022, mowing, height_ft, "title")
-boxplot(seedlings2023, mowing, height_ft, "title")
-boxplot(seedlings2024, mowing, height_ft, "title")
-boxplot(seedlings2025, mowing, height_ft, "title")
