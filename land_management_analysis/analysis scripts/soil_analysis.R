@@ -17,733 +17,263 @@ library(ggnewscale) #to be able to assign different colors to different layered 
 
 #soil data brought to you by https://websoilsurvey.nrcs.usda.gov/app/WebSoilSurvey.aspx
 setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data/wss_aoi_2026_ILM/spatial")
-soil_map_ILM <- st_read("soilmu_a_aoi.shp")
-soil_map_ILM_transformed <- st_transform(soil_map_ILM, crs = 26918)
-plot(soil_map_ILM)
+soil_map_ILM <- st_read("soilmu_a_aoi.shp", crs = 4326)
+soil_map_ILM_transformed <- st_crop(st_transform(soil_map_ILM, crs = 26918), ILM_fixed_field_data_processed_box)
+plot(soil_map_ILM_transformed)
 #note that the WSS system labels the soil categories as "MUSYM" and so that column is what denotes soil category for each butternut, determined by where that butternut's point geometry intersects with the soil polygons
 ILM_data_w_soils <- st_join(ILM_fixed_field_data_processed_sf_transformed, soil_map_ILM_transformed, join = st_intersects)
 
-win <- as.owin(ILM_fixed_field_data_processed_box) #turning the box into a window
-ILM_ppp <- as.ppp(st_coordinates(ILM_fixed_field_data_processed_sf), W = win) #creating the poisson point pattern for LM
-ILM_ppp <- unmark(ILM_ppp)
-ILM_ppp_df <- data.frame(x = ILM_ppp$x, y = ILM_ppp$y)
-ILM_ppp_sf <- st_as_sf(ILM_ppp_df, coords = c("x", "y"), crs = 4326)
-ILM_ppp_sf_transformed <- st_transform(ILM_ppp_sf, crs = 26918)
-null_ILM_data_w_soils <- st_join(ILM_ppp_sf_transformed, soil_map_ILM_transformed, join = st_intersects)
 
-barplot(ILM_data_w_soils, MUSYM, "Soil for ILM butternuts")
+#RANDOM POINT ANALYSIS
 
-barplot(data_CPVT, soil_type, "Soil at CPVT")
-barplot(data_CPVTseedlings, soil_type, "Soil at CPVT")
-#I will need to get the polygons working if I want to do a PPP for soils
+set.seed(25)
 
-boxplot(data_ILMliveadults, soil_type, adult_percent_live_canopy, "Canopy at ILM by soil")
-boxplot(data_CPVTliveadults, soil_type, adult_percent_live_canopy, "Canopy at CPVT by soil")
-
-boxplot(data_ILMliveadults, soil_type, live_adult_girdle, "Girdle at ILM by soil")
-boxplot(data_CPVTliveadults, soil_type, live_adult_girdle, "Girdle at CPVT by soil")
-
-boxplot(data_ILMliveadults, soil_type, live_adult_purdue_canker_rating, "Purdue canker ranking at ILM by soil")
-boxplot(data_CPVTliveadults, soil_type, live_adult_purdue_canker_rating, "Purdue canker ranking at CPVT by soil")
-
-boxplot(data_ILMliveadults, soil_type, live_adult_purdue_canopy_ranking, "Purdue canopy ranking at ILM by soil")
-boxplot(data_CPVTliveadults, soil_type, live_adult_purdue_canopy_ranking, "Purdue canopy ranking at CPVT by soil")
-
-map(data_ILM, soil_type, TRUE, "soils at ILM")
-map(data_CPVT, soil_type, TRUE, "soils at CPVT")
-
-#fixing column names to be able to merge dataframes
-SD_fixed_field_data_processed_terrain_dist_soils <- SD_fixed_field_data_processed_terrain_dist_soils %>%
-  mutate(aspect_raster_15_data_pts = SD_aspect_raster_15_data_pts) %>%
-  mutate(slope_raster_15_data_pts = SD_slope_raster_15_data_pts) %>%
-  mutate(elevation_raster_15_data_pts = SD_elevation_raster_15_data_pts) %>%
-  mutate(aspect_raster_15_data_pts = SD_aspect_raster_15_data_pts) %>%
-  mutate(aspect_raster_15_data_pts_8_categorical = SD_aspect_raster_15_data_pts_8_categorical) %>%
-  mutate(aspect_raster_15_data_pts_4_categorical = SD_aspect_raster_15_data_pts_4_categorical) %>%
-  mutate(aspect_raster_15_data_pts_radian = SD_aspect_raster_15_data_pts_radian) %>%
-  mutate(Eastness = SD_Eastness) %>%
-  mutate(Northness = SD_Northness) %>%
-  mutate(TWI_values = SD_TWI_values) %>%
-  select(-c("SD_slope_raster_15_data_pts", "SD_elevation_raster_15_data_pts", "SD_aspect_raster_15_data_pts",
-            "SD_aspect_raster_15_data_pts_8_categorical", "SD_aspect_raster_15_data_pts_4_categorical",
-            "SD_aspect_raster_15_data_pts_radian", "SD_Eastness", "SD_Northness", "SD_TWI_values"))
-
-
-#combine all three populations into one dataframe, subsetting what variables to remove to allow for rbinding
-fixed_field_data_processed_soils <- rbind(subset(LM_fixed_field_data_processed_terrain_dist_soils, select = -c(LM_aspect_raster_15_data_pts.1, LM_slope_raster_15_data_pts.1,
-                                                                                                               LM_elevation_raster_15_data_pts.1, LM_aspect_raster_15_data_pts_8_categorical.1,
-                                                                                                               LM_aspect_raster_15_data_pts_4_categorical.1, LM_aspect_raster_15_data_pts_radian.1, 
-                                                                                                               LM_Eastness.1, LM_Northness.1, LM_TWI_values.1)), 
-                                          subset(LC_fixed_field_data_processed_terrain_dist_soils, select = -c(LC_aspect_raster_15_data_pts.1, LC_slope_raster_15_data_pts.1,
-                                                                                                               LC_elevation_raster_15_data_pts.1, LC_aspect_raster_15_data_pts_8_categorical.1,
-                                                                                                               LC_aspect_raster_15_data_pts_4_categorical.1, LC_aspect_raster_15_data_pts_radian.1, 
-                                                                                                               LC_Eastness.1, LC_Northness.1, LC_TWI_values.1))) #combining the LM and LC soil and randomly chosen tree data
-fixed_field_data_processed_soils <- rbind(fixed_field_data_processed_soils, 
-                                          subset(SD_fixed_field_data_processed_terrain_dist_soils, select = -c(SD_aspect_raster_15_data_pts.1, SD_slope_raster_15_data_pts.1,
-                                                                                                               SD_elevation_raster_15_data_pts.1, SD_aspect_raster_15_data_pts_8_categorical.1,
-                                                                                                               SD_aspect_raster_15_data_pts_4_categorical.1, SD_aspect_raster_15_data_pts_radian.1, 
-                                                                                                               SD_Eastness.1, SD_Northness.1, SD_TWI_values.1))) #combining the SD tree point data to the LM and LC soil and randomly chosen tree point data
-
-
-#### Creating the Function Comparing Average Soil Values from Inside Populations to Outside Populations ####
-
-# This function iterates over each soil metric and compares the average soil metric across the known populations
-# to a distribution of randomly generated distribution populations means to see if the known populations have significantly
-# different soil metrics compared at random. 
-
-# The components of the function are
-# 1) generating an empty list for the soil means and the p-values from comparing the real and randomized population soil means.
-# 2) a loop to iterate over each soil metric in which 
-# generate a list of random soil means from randomly distributed populations (n=20, 1000 permutations),
-# plots of the cropped Baja California Sur polygon and the randomly selected points,
-# store the soil mean for the known population,
-# plot and stored the figure showing the real soil mean and a histogram of the randomly generated soil means,
-# generate the p-values (using significantly different),
-# and store the real population soil eans and p-values in their respective lists
-
-#creating the list of soil metrics to iterate over
-Soil.metrics <- c("Clay 0-5", "Clay 100-200", "Silt 0-5", "Silt 100-200", "Sand 0-5", "Sand 100-200",
-                  "Ph 0-5", "Ph 100-200",  "Volume of water content -10 kpa 0-5",
-                  "Volume of water content -10 kpa 100-200", "Volume of water content -33 kpa 0-5",
-                  "Volume of water content -33 kpa 100-200", "Volume of water content -1500 kpa 0-5", 
-                  "Volume of water content -1500 kpa 100-200", 
-                  "Nitrogen 0-5", "Nitrogen 100-200", 
-                  "Soil Organic Carbon 0-5", "Soil Organic Carbon 100-200",
-                  "Sand Available Water 0-5", "Sand Available Water 100-200",
-                  "Clay/Loam Available Water 0-5", "Clay/Loam Available Water 100-200",
-                  "Elevation", "Slope", "Eastness", "Northness", "TWI", "HLI", "Distance to Coast")
-
-# The function the soil mean list and p-value list, the randomly generated point plots, and stored histogram plot list.
-
-pb <- txtProgressBar(min = 1, max = 29, style = 3)
-
-
-random_pop_soils <- function(){
+#creating the dataframe that stores how many points are in each soil type for each random distribution
+stored_random_distributions <- data.frame(MUSYM = unique(soil_map_ILM$MUSYM))
+#this loop will run 1000 times (so it takes a while to run!!) and do a few things:
+#1) create a random 20 point distribution within the bounding box of ILM points
+#2) figure out what soil type each random point is on
+#3) count up the hits to each soil type
+#4) store those hits on the above dataframe
+for (y in 1:1000){ 
+  #generating and extracting the randomly distributed population soil categories
+  random_163 <- st_sample(ILM_fixed_field_data_processed_box, 163) #select random 20 points within the cropped ILM polygon
+  random_163 <- random_163 %>%
+    st_as_sf() %>% #making sure the random points are stored as simple features
+    st_transform(random_163, crs = 26918) #making sure they are in the right CRS
   
+  random_163_soil_categories <- st_join(random_163, soil_map_ILM_transformed, join = st_intersects) #linking each random point to its soil category
   
-  #creating empty list to collect know population soil means and p-values
-  known_soil_means <- c()  #for the p values of the known population means
-  random_soil_p_values <- c()  #for the p values of the randomly generated population means compared to our known soil mean
-  
-  #to store generated histogram plots
-  plot_list <- list()   
-  
-  #setting a seed
-  set.seed(20) 
-  
-  #loop iterating over each soil metric
-  for (i in 1:length(Soil.metrics)){
-    
-    #assigning the population based on the current soil metric in the list
-    if (Soil.metrics[i] == "Clay 0-5"){ 
-      soil_stack = soil_stack_clay
-      soil_metric = all_known_pop_soils$clay.content.0.5
-    } else if (Soil.metrics[i] == "Clay 100-200"){
-      soil_stack = soil_stack_clay
-      soil_metric = all_known_pop_soils$clay.content.100.200
-    } else if (Soil.metrics[i] == "Silt 0-5"){
-      soil_stack = soil_stack_silt
-      soil_metric = all_known_pop_soils$silt.0.5
-    } else if (Soil.metrics[i] == "Silt 100-200"){
-      soil_stack = soil_stack_silt
-      soil_metric = all_known_pop_soils$silt.100.200
-    } else if (Soil.metrics[i] == "Sand 0-5"){
-      soil_stack = soil_stack_sand
-      soil_metric = all_known_pop_soils$sand.0.5
-    } else if (Soil.metrics[i] == "Sand 100-200"){
-      soil_stack = soil_stack_sand
-      soil_metric = all_known_pop_soils$sand.100.200
-    } else if (Soil.metrics[i] == "Ph 0-5"){
-      soil_stack = soil_stack_ph
-      soil_metric = all_known_pop_soils$ph_0.5
-    } else if (Soil.metrics[i] == "Ph 100-200"){
-      soil_stack = soil_stack_ph
-      soil_metric = all_known_pop_soils$ph_100.200
-    } else if (Soil.metrics[i] == "Volume of water content -10 kpa 0-5"){
-      soil_stack = soil_stack_vol_wat_10kpa
-      soil_metric = all_known_pop_soils$vol_water_.10_0.5
-    } else if (Soil.metrics[i] == "Volume of water content -10 kpa 100-200"){
-      soil_stack = soil_stack_vol_wat_10kpa
-      soil_metric = all_known_pop_soils$vol_water_.10_100.200
-    } else if (Soil.metrics[i] == "Volume of water content -33 kpa 0-5"){
-      soil_stack = soil_stack_vol_wat_33kpa
-      soil_metric = all_known_pop_soils$vol_water_0.5
-    } else if (Soil.metrics[i] == "Volume of water content -33 kpa 100-200"){
-      soil_stack = soil_stack_vol_wat_33kpa
-      soil_metric = all_known_pop_soils$vol_water_100.200
-    } else if (Soil.metrics[i] == "Volume of water content -1500 kpa 0-5"){
-      soil_stack = soil_stack_vol_wat_1500kpa
-      soil_metric = all_known_pop_soils$vol_water_.1500kPa_0.5
-    } else if (Soil.metrics[i] == "Volume of water content -1500 kpa 100-200"){
-      soil_stack = soil_stack_vol_wat_1500kpa
-      soil_metric = all_known_pop_soils$vol_water_.1500_100.200
-    } else if (Soil.metrics[i] == "Nitrogen 0-5"){
-      soil_stack = soil_stack_nitrogen
-      soil_metric = all_known_pop_soils$nitrogen.0.5
-    } else if (Soil.metrics[i] == "Nitrogen 100-200"){
-      soil_stack = soil_stack_nitrogen
-      soil_metric = all_known_pop_soils$nitrogen.100.200
-    } else if (Soil.metrics[i] == "Soil Organic Carbon 0-5"){
-      soil_stack = soil_stack_soc
-      soil_metric = all_known_pop_soils$SOC.0.5
-    } else if (Soil.metrics[i] == "Soil Organic Carbon 100-200"){
-      soil_stack = soil_stack_soc
-      soil_metric = all_known_pop_soils$SOC.100.200
-    } else if (Soil.metrics[i] == "Sand Available Water 0-5"){
-      soil_stack = soil_stack_sandy_water
-      soil_metric = all_known_pop_soils$sandy_avail_water_0.5
-    } else if (Soil.metrics[i] == "Sand Available Water 100-200"){
-      soil_stack = soil_stack_sandy_water
-      soil_metric = all_known_pop_soils$sandy_avail_water_100.200
-    } else if (Soil.metrics[i] == "Clay/Loam Available Water 0-5"){
-      soil_stack = soil_stack_clay_loam_water
-      soil_metric = all_known_pop_soils$clay_loam_avail_water_0.5
-    } else if (Soil.metrics[i] == "Clay/Loam Available Water 100-200"){
-      soil_stack = soil_stack_clay_loam_water
-      soil_metric = all_known_pop_soils$clay_loam_avail_water_100.200
-    }  else if (Soil.metrics[i] == "Elevation"){
-      soil_raster = CEM_15_utm_all_populations
-      soil_metric = all_known_pop_soils$CEM_15_utm_all_populations
-    } else if (Soil.metrics[i] == "Slope"){
-      soil_raster = all_populations_slope_raster_15
-      soil_metric = all_known_pop_soils$all_known_pop_soil_slope
-    } else if (Soil.metrics[i] == "Eastness"){
-      soil_metric = all_known_pop_soils$all_known_pop_soil_eastness
-    } else if (Soil.metrics[i] == "Northness"){
-      soil_metric = all_known_pop_soils$all_known_pop_soil_northness
-    } else if (Soil.metrics[i] == "TWI"){
-      soil_raster = twi_all_populations
-      soil_metric = all_known_pop_soils$all_known_pop_soil_TWI
-    } else if (Soil.metrics[i] == "HLI"){
-      soil_raster = raster(heat.load.raster.all.pops)
-      soil_metric = all_known_pop_soils$all_known_pop_soil_HLI
-    } else if (Soil.metrics[i] == "Distance to Coast"){
-      soil_metric = all_known_pop_soils$distance
-    } 
-    
-    
-    #creating a list of the variables without soil stacks
-    no_stack_list <- c("Elevation", "Slope", "Eastness", "Northness",
-                       "TWI", "HLI", "Distance to Coast")
-    
-    #creating empty list to collect means
-    random_soil_means <- numeric(1000)  #for the means of the randomly generated population means
-    
-    
-    #looping for 1000 permutations
-    for (y in 1:1000){ 
-      
-      #generating and extracting the randomly distributed population soil metric mean
-      random_20 <- st_sample(BCS_polygon_box_sf_cropped, 20) #select random 20 points within the cropped BCS polygon
-      random_20 <- random_20 %>%
-        st_as_sf() #making sure the random points are stored as simple features
-      
-      #if the metrics have soil stack (soil metric with 0-5 and 100-200 cm) it run this first loop
-      if (!(Soil.metrics[i] %in% no_stack_list)){
-        random_20_pop_soil <- raster::extract(soil_stack, random_20) #extracting the soil metrics for the random points
-        
-        #storing the mean of the soil metric of the randomly generated populations depending on if it is the 0-5 or 100-200 cm version of the rasters
-        if (i %% 2 == 1){ #if the iteration we are on is odd, then we use the 0-5 cm variable
-          random_mean <- mean(random_20_pop_soil[,1], na.rm = TRUE) #storing the mean soil metric, using the 0-5 cm raster
-        } else {  #if the iteration we are on is odd, then we use the 100-200 cm variable
-          random_mean <- mean(random_20_pop_soil[,2], na.rm = TRUE) #storing the mean soil metric, using the 100-200 cm raster
-        }
-        
-      } else if (Soil.metrics[i] == "Eastness") {   #calculating the Eastness for the randomly selected points
-        
-        random_20_aspect <- raster::extract(all_populations_aspect_raster_15, random_20) #extracting the soil metrics for the random points
-        
-        #first, converting aspect values to radian
-        random_20_aspect_radian = ((random_20_aspect * pi) / 180) # creating a column that is the radians
-        
-        #creating eastness
-        random_20_eastness = sin(random_20_aspect_radian) # creating the eastness column
-        
-        random_mean <- mean(random_20_eastness, na.rm = TRUE)
-        
-      } else if (Soil.metrics[i] == "Northness") {   #calculating the Eastness for the randomly selected points
-        
-        random_20_aspect <- raster::extract(all_populations_aspect_raster_15, random_20) #extracting the soil metrics for the random points
-        
-        #first, converting aspect values to radian
-        random_20_aspect_radian = ((random_20_aspect * pi) / 180) # creating a column that is the radians
-        
-        #creating northness
-        random_20_northness = cos(random_20_aspect_radian) # creating the northness column
-        
-        random_mean <- mean(random_20_northness, na.rm = TRUE)
-        
-      } else if (Soil.metrics[i] == "Distance to Coast") { #calculating the distance to river for the randomly selected points
-        #  converting the all populations locations to spatial data with longitudes and latitudes to be able to calculate distances
-        random_20_sp <- st_transform(random_20, crs = 4326)
-        random_20_sp <- as(st_geometry(random_20_sp), "Spatial")
-        
-        # calculates the shortest distance (meters) of each population to the coast
-        Distance <- dist2Line(p = random_20_sp, 
-                              line = BCS_polygon_UTM_sp_coast)
-        
-        #turn the matrix into a dataframe
-        Distance <- as.data.frame(Distance)
-        
-        # calculating the mean
-        random_mean <- mean(Distance$distance, na.rm = TRUE)
-        
-        
-      } else if (Soil.metrics[i] == "Elevation") { #if the metric does not have a soil stack (the topographic variables)
-        
-        #extracting the soil metrics for the random points
-        random_20_pop_soil <- raster::extract(soil_raster, random_20) 
-        
-        #storing the mean metric
-        random_mean <- mean(random_20_pop_soil, na.rm = T) 
-        
-      } else { #if the metric does not have a soil stack (the topographic variables)
-        
-        #extracting the soil metrics for the random points
-        random_20_pop_soil <- raster::extract(soil_raster, random_20) 
-        
-        #storing the mean metric
-        random_mean <- mean(random_20_pop_soil, na.rm = TRUE) 
-        
-      }
-      
-      #adding the created random mean to the list
-      random_soil_means[y] <- random_mean
-      
-      
-    }
-    
-    #plotting the randomly selected points on the cropped, buffered, and full Baja California Sur polygons
-    random_points_BCS <- ggplot()+
-      geom_sf(data=BCS_polygon_UTM)+
-      geom_sf(data=BCS_polygon_box_sf_cropped, color = "red")+
-      geom_sf(data=all_pop_locations.df_sf_trans_coordinates)+
-      geom_sf(data=random_20, color ="blue")
-    
-    #plotting the randomly generated points just on the cropped polygon
-    random_points_BCS_crop <- ggplot()+
-      geom_sf(data=BCS_polygon_box_sf_cropped, color = "red")+
-      geom_sf(data=all_pop_locations.df_sf_trans_coordinates)+
-      geom_sf(data=random_20, color ="blue")
-    
-    #storing the real soil metric mean for our known populations
-    all_known_mean <- mean(soil_metric, na.rm = TRUE)
-    
-    #adding the current known population mean soil metric to the list
-    known_soil_means <- c(known_soil_means, all_known_mean)
-    
-    #plotting the histogram of the randomly distributed means and our real mean
-    plot_out_histogram <- ggplot(data.frame(random_soil_means = random_soil_means))+ #data.frame(random_soil_means = random_soil_means)
-      geom_histogram(aes(x=random_soil_means),  fill = "dodgerblue1", color = "black", bins = 50 )+
-      geom_vline(xintercept=all_known_mean, col = "red")+ #line of our real slope
-      xlab(paste0("Mean ", Soil.metrics[i], " of Random Populations vs. Known Populations (n=20)"))+
-      theme_classic()
-    
-    # store the histogram in list with a descriptive name
-    plot_name_histogram <- paste(Soil.metrics[i], "Histogram",
-                                 sep = "_")
-    plot_list[[plot_name_histogram]] <- plot_out_histogram
-    
-    random_soil_means <- na.omit(random_soil_means) #removing NAs
-    
-    # if using greater than hypothesis
-    
-    #calculating pseudo p-value for 
-    # total = 0  #set empty value
-    # for (k in 1:length(random_soil_means)){ #loop that adds 1 to the value total if the simulated ANN value is less than our average value for our trees
-    #   if (random_soil_means[k] < all_known_mean){
-    #     total = total + 1
-    #   }
-    # } #add number of values of in the random set of means values that are less than our mean ANN
-    # random_p.value <- 1 - (total / length(random_soil_means)) #the proportion of random ANNs that are greater than our ANN
-    
-    # using the significantly different alternative hypothesis, two-sided test
-    
-    p_value_greater_than <- sum(random_soil_means >= all_known_mean)/length(random_soil_means)   # proportion of simulated slopes higher than our real slope
-    p_value_less_than <- sum(random_soil_means <= all_known_mean)/length(random_soil_means)   # proportion of simulated slopes lower than our real slope
-    random_p.value <- min(1, 2 * min(p_value_greater_than, p_value_less_than)) # take the smaller tail (the "more extreme" one), then double it
-    
-    #adding the p value to total list of p-values for all soil metrics
-    random_soil_p_values <- c(random_soil_p_values, random_p.value)
-    
-    #print(paste("Updating:", i)) # printing the iteration number we are currently on
-    
-    # Sleep for 0.1 seconds
-    Sys.sleep(0.01)
-    
-    #printing progress bar, adding 1/29th everytime
-    setTxtProgressBar(pb, i)
-    
-  }
-  
-  return(list(known_soil_means = known_soil_means, #soil mean list
-              random_soil_p_values = random_soil_p_values, #p-value list
-              all_known_mean = all_known_mean,
-              random_points_BCS = random_points_BCS, #randomly generated points plot
-              random_points_BCS_crop = random_points_BCS_crop, #randomly generated points plot with the crop
-              plot_list = plot_list)) #stored histogram plot list
-  
+  random_163_soil_counts <- as.data.frame(random_163_soil_categories %>% count(MUSYM)) #counting up how many random hits we got to each soil category
+  random_163_soil_counts <- subset(random_163_soil_counts, select = -x) #removing the geometry column
+
+  stored_random_distributions <- stored_random_distributions %>% left_join(random_163_soil_counts, by = join_by(MUSYM)) #adding the number of points in each soil category to a storing dataframe (for each iteration of random points)
+  stored_random_distributions[is.na(stored_random_distributions)] <- 0 #if no points were found in that soil type, it's listed as 0 points, not NA
 }
 
+stored_random_distributions_cleaned <- data.frame(t(stored_random_distributions))
+colnames(stored_random_distributions_cleaned) <- stored_random_distributions_cleaned[1,]
+stored_random_distributions_cleaned <- stored_random_distributions_cleaned[-1,]
+rownames(stored_random_distributions_cleaned) <- NULL
+stored_random_distributions_cleaned <- mutate_all(stored_random_distributions_cleaned, function(x) as.numeric((x)))
 
-#### Running and Storing the Function and its Results ####
-random_pop_soils_function <- random_pop_soils()
+#now let's get the data on the real stuff
+#creating the dataframe that stores how many points are in each soil type for each random distribution
+stored_real_distribution <- data.frame(MUSYM = unique(soil_map_ILM$MUSYM))
 
-#Example of extracting one of the histograms comparing the slopes for our original soil vs. size metrics to the shuffled ones
-random_pop_soils_function$plot_list$`Clay 0-5_Histogram`
-plot <- random_pop_soils_function$plot_list$`Clay 0-5_Histogram`
-random_pop_soils_function$plot_list$`Ph 0-5_Histogram`
-random_pop_soils_function$plot_list$`Ph 100-200_Histogram`
+real_163_soil_counts <- as.data.frame(ILM_data_w_soils %>% count(MUSYM))
 
-#if you want to see all of the plots at once run: 
-#random_pop_soils_function$plot_list
+real_163_soil_counts <- subset(real_163_soil_counts, select = -geometry) #removing the geometry column
+#why the flippity flop is it called geometry here and x above????
+  
+stored_real_distribution <- stored_real_distribution %>% left_join(real_163_soil_counts, by = join_by(MUSYM)) #adding the number of points in each soil category to a storing dataframe (for each iteration of random points)
 
-# Bonferroni correction for the p-values to protect against issues due to multiple testing
-p_bonf_corrected <- p.adjust(random_pop_soils_function$random_soil_p_values, method = "bonferroni")
+stored_real_distribution[is.na(stored_real_distribution)] <- 0 #if no points were found in that soil type, it's listed as 0 points, not NA
 
-# Holm correction for the p-values to protect against issues due to multiple testing
-p_holm_corrected <- p.adjust(random_pop_soils_function$random_soil_p_values, method = "holm")
-
-# Hochberg correction for the p-values to protect against issues due to multiple testing
-p_hoch_corrected <- p.adjust(random_pop_soils_function$random_soil_p_values, method = "hochberg")
-
-# FDR correction for the p-values to protect against issues due to multiple testing
-p_fdr_corrected <- p.adjust(random_pop_soils_function$random_soil_p_values, method = "fdr")
-
-#making a dataframe from the function output
-random_pop.df <- data.frame("Soil.metrics" = Soil.metrics, 
-                            "Means" = random_pop_soils_function$known_soil_means,
-                            "P_values" = random_pop_soils_function$random_soil_p_values, 
-                            "P_values_bonf_corrected" = p_bonf_corrected,
-                            "p_holm_corrected" = p_holm_corrected,
-                            "p_hoch_corrected" = p_hoch_corrected,
-                            "p_fdr_corrected" = p_fdr_corrected,
-                            "Significance" = c(rep(NA, 29)),
-                            "Bonf_Significance" = c(rep(NA, 29)),
-                            "Holm_Significance" = c(rep(NA, 29)),
-                            "Hoch_Significance" = c(rep(NA, 29)),
-                            "FDR_Significance" = c(rep(NA, 29)))
-
-#creating the significance column for the p-values (p<0.05 is significant)
-random_pop.df <- random_pop.df %>%
-  mutate(Significance = case_when(random_pop_soils_function$random_soil_p_values < 0.05 ~ "Y",
-                                  random_pop_soils_function$random_soil_p_values >= 0.05 ~ "N")) %>%
-  mutate(Bonf_Significance = case_when(p_bonf_corrected < 0.05 ~ "Y",
-                                       p_bonf_corrected >= 0.05 ~ "N")) %>%
-  mutate(Holm_Significance = case_when(p_holm_corrected < 0.05 ~ "Y",
-                                       p_holm_corrected >= 0.05 ~ "N")) %>%
-  mutate(Hoch_Significance = case_when(p_hoch_corrected < 0.05 ~ "Y",
-                                       p_hoch_corrected >= 0.05 ~ "N")) %>%
-  mutate(FDR_Significance = case_when(p_fdr_corrected < 0.05 ~ "Y",
-                                      p_fdr_corrected >= 0.05 ~ "N")) 
+stored_real_distribution_cleaned <- data.frame(t(stored_real_distribution))
+colnames(stored_real_distribution_cleaned) <- stored_real_distribution_cleaned[1,]
+stored_real_distribution_cleaned <- stored_real_distribution_cleaned[-1,]
+rownames(stored_real_distribution_cleaned) <- NULL
+# Source - https://stackoverflow.com/a/48419207
+# Posted by R. Prost, modified by community. See post 'Timeline' for change history
+# Retrieved 2026-08-05, License - CC BY-SA 4.0
+stored_real_distribution_cleaned <- mutate_all(stored_real_distribution_cleaned, function(x) as.numeric((x)))
 
 
-#### Generating a Heat Map ####
+#YOU HAVE TO RUN THIS AS ONE BIG BLOCK
+real_vs_random_quantiles <- data.frame(MUSYM = unique(soil_map_ILM$MUSYM))
+real_vs_random_quantiles <- data.frame(t(real_vs_random_quantiles))
+colnames(real_vs_random_quantiles) <- real_vs_random_quantiles[1,]
+for (i in 1:ncol(stored_random_distributions_cleaned)){
+  cat <- real_vs_random_quantiles[[i]]
+  real_vs_random_quantiles[1,i] <- ecdf(stored_random_distributions_cleaned[[cat]])(as.numeric(stored_real_distribution_cleaned[[cat]]))
+}
+#END OF BLOCK
+
+#plotting the histogram of the randomly distributed means and our real mean
+plot_out_histogram <- function(cat){
+  # Source - https://stackoverflow.com/a/36015931
+  ggplot(stored_random_distributions_cleaned, aes(x = {{cat}}))+
+    geom_histogram(fill = "dodgerblue1", color = "black")+
+    geom_vline(xintercept= as.numeric(stored_real_distribution_cleaned[[deparse(substitute(cat))]]), col = "red")+ #line of our real slope
+    labs(title = paste0("Simulated Number of butternuts in Soil ", deparse(substitute(cat)), " (n=163)"), subtitle = paste0("Quantile of real value: ", real_vs_random_quantiles[[deparse(substitute(cat))]]))+
+    theme_classic()
+}
+
+plot_out_histogram(BcB)
+plot_out_histogram(AaC)
+plot_out_histogram(BdC)
+plot_out_histogram(EaA)
+plot_out_histogram(AaA)
+plot_out_histogram(AbA)
+plot_out_histogram(CbA)
+plot_out_histogram(KbA)
+plot_out_histogram(AaB)
+plot_out_histogram(BdB)
+plot_out_histogram(CdB)
+plot_out_histogram(BdD)
+plot_out_histogram(KaC)
+plot_out_histogram(BcC)
+plot_out_histogram(SdA)
+plot_out_histogram(KaB)
+plot_out_histogram(MaB)
+plot_out_histogram(BdE)
+plot_out_histogram(KbB)
+plot_out_histogram(KcA)
+plot_out_histogram(AbC)
+#W is water; no butternuts
+plot_out_histogram(AbB)
 
 
-#heat map of Bonferonni corrected P-values with labeled p-values
-ggplot(aes(x = fct_reorder(Soil.metrics, p_bonf_corrected), y = Bonf_Significance, fill = p_bonf_corrected), data = random_pop.df) +
-  geom_tile() + 
-  labs(y = "Significant P-Value", x  = "Soil Characteristic", 
-       fill = "P-Value",  
-       title = "Association Between Soil Metrics and Population Locations",
-       subtitle = "P-Values Below 0.05 Labeled") + 
-  scale_fill_distiller(palette = "RdPu", direction = -1) + 
-  geom_text(aes(label = ifelse(p_bonf_corrected < 0.05, round(p_bonf_corrected, 4), NA), col = "white")) +
-  coord_flip() +
-  theme_classic() +
-  theme(axis.text = element_text(size = 13),
-        axis.title = element_text(size=13),
-        title = element_text(size = 13),
-        legend.title = element_text(size = 13),
-        plot.subtitle = element_text(size = 12))
-
-#heat map of Holm corrected P-values with labeled p-values
-ggplot(aes(x = fct_reorder(Soil.metrics, p_holm_corrected), y = Holm_Significance, fill = p_holm_corrected), data = random_pop.df) +
-  geom_tile() + 
-  labs(y = "Significant P-Value", x  = "Soil Characteristic", 
-       fill = "P-Value",  
-       title = "Association Between Soil Metrics and Population Locations",
-       subtitle = "Holm Correction, P-Values Below 0.5 Labeled") + 
-  scale_fill_distiller(palette = "RdPu", direction = -1) + 
-  geom_text(aes(label = ifelse(p_holm_corrected < 0.05, round(p_holm_corrected, 4), NA), col = "white")) +
-  coord_flip() +
-  theme_classic() +
-  theme(axis.text = element_text(size = 13),
-        axis.title = element_text(size=13),
-        title = element_text(size = 13),
-        legend.title = element_text(size = 13),
-        plot.subtitle = element_text(size = 12))
-
-#heat map of Hochberg corrected P-values with labeled p-values
-ggplot(aes(x = fct_reorder(Soil.metrics, p_hoch_corrected), y = Hoch_Significance, fill = p_hoch_corrected), data = random_pop.df) +
-  geom_tile() + 
-  labs(y = "Significant P-Value", x  = "Soil Characteristic", 
-       fill = "P-Value",  
-       title = "Association Between Soil Metrics and Population Locations",
-       subtitle = "Hochberg Correction, P-Values Below 0.5 Labeled") + 
-  scale_fill_distiller(palette = "RdPu", direction = -1) + 
-  geom_text(aes(label = ifelse(p_hoch_corrected < 0.05, round(p_hoch_corrected, 4), NA), col = "white")) +
-  coord_flip() +
-  theme_classic() +
-  theme(axis.text = element_text(size = 13),
-        axis.title = element_text(size=13),
-        title = element_text(size = 13),
-        legend.title = element_text(size = 13),
-        plot.subtitle = element_text(size = 12))
-
-#heat map of FDR corrected P-values with labeled p-values
-ggplot(aes(x = fct_reorder(Soil.metrics, p_fdr_corrected), y = FDR_Significance, fill = p_fdr_corrected), data = random_pop.df) +
-  geom_tile() + 
-  labs(y = "Significant P-Value", x  = "Soil Characteristic", 
-       fill = "P-Value",  
-       title = "Association Between Soil Metrics and Population Locations",
-       subtitle = "FDR Correction, P-Values Below 0.5 Labeled") + 
-  scale_fill_distiller(palette = "RdPu", direction = -1) + 
-  geom_text(aes(label = ifelse(p_fdr_corrected < 0.05, round(p_fdr_corrected, 4), NA), col = "white")) +
-  coord_flip() +
-  theme_classic() +
-  theme(axis.text = element_text(size = 13),
-        axis.title = element_text(size=13),
-        title = element_text(size = 13),
-        legend.title = element_text(size = 13),
-        plot.subtitle = element_text(size = 12))
+#----
+#CPVT
+#soil data brought to you by https://websoilsurvey.nrcs.usda.gov/app/WebSoilSurvey.aspx
+setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data/wss_aoi_2026_CPVT/spatial")
+soil_map_CPVT <- st_read("soilmu_a_aoi.shp", crs = 4326)
+soil_map_CPVT_transformed <- st_crop(st_transform(soil_map_CPVT, crs = 26918), CPVT_fixed_field_data_processed_box)
+plot(soil_map_CPVT_transformed)
+#note that the WSS system labels the soil categories as "MUSYM" and so that column is what denotes soil category for each butternut, determined by where that butternut's point geometry intersects with the soil polygons
+CPVT_data_w_soils <- st_join(CPVT_fixed_field_data_processed_sf_transformed, soil_map_CPVT_transformed, join = st_intersects)
 
 
-#heat map of P-values without correction with labeled p-values
-ggplot(aes(x = fct_reorder(Soil.metrics, P_values), y = Significance, fill = P_values), data = random_pop.df) +
-  geom_tile() + 
-  labs(y = "Significant P-Value", x  = "Soil Characteristic", 
-       fill = "P-Value",  
-       title = "Association Between Soil Metrics and Population Locations",
-       subtitle = "P-Values Below 0.5 Labeled") + 
-  scale_fill_distiller(palette = "RdPu", direction = -1) + 
-  geom_text(aes(label = ifelse(P_values < 0.05, round(P_values, 4), round(P_values, 4))), col = "white") +
-  coord_flip() +
-  theme_classic() +
-  theme(axis.text = element_text(size = 13),
-        axis.title = element_text(size=13),
-        title = element_text(size = 13),
-        legend.title = element_text(size = 13),
-        plot.subtitle = element_text(size = 12))
+#RANDOM POINT ANALYSIS
 
-#Histograms of the soil metric comparisons that were significiant
-random_pop_soils_function$plot_list$`Sand 0-5_Histogram`
-random_pop_soils_function$plot_list$`Volume of water content -33 kpa 0-5_Histogram`
-random_pop_soils_function$plot_list$`Volume of water content -33 kpa 100-200_Histogram`
-random_pop_soils_function$plot_list$Elevation_Histogram
-random_pop_soils_function$plot_list$Slope_Histogram
-random_pop_soils_function$plot_list$Eastness_Histogram
-random_pop_soils_function$plot_list$Northness_Histogram
-random_pop_soils_function$plot_list$TWI_Histogram
-random_pop_soils_function$plot_list$HLI_Histogram
-random_pop_soils_function$plot_list$`Distance to River_Histogram`
+set.seed(25)
 
+#creating the dataframe that stores how many points are in each soil type for each random distribution
+stored_random_distributions <- data.frame(MUSYM = unique(soil_map_CPVT$MUSYM))
+#this loop will run 1000 times (so it takes a while to run!!) and do a few things:
+#1) create a random 20 point distribution within the bounding box of CPVT points
+#2) figure out what soil type each random point is on
+#3) count up the hits to each soil type
+#4) store those hits on the above dataframe
+for (y in 1:1000){ 
+  #generating and extracting the randomly distributed population soil categories
+  random_249 <- st_sample(CPVT_fixed_field_data_processed_box, 249) #select random 20 points within the cropped CPVT polygon
+  random_249 <- random_249 %>%
+    st_as_sf() %>% #making sure the random points are stored as simple features
+    st_transform(random_249, crs = 26918) #making sure they are in the right CRS
+  
+  random_249_soil_categories <- st_join(random_249, soil_map_CPVT_transformed, join = st_intersects) #linking each random point to its soil category
+  
+  random_249_soil_counts <- as.data.frame(random_249_soil_categories %>% count(MUSYM)) #counting up how many random hits we got to each soil category
+  random_249_soil_counts <- subset(random_249_soil_counts, select = -x) #removing the geometry column
+  
+  stored_random_distributions <- stored_random_distributions %>% left_join(random_249_soil_counts, by = join_by(MUSYM)) #adding the number of points in each soil category to a storing dataframe (for each iteration of random points)
+  stored_random_distributions[is.na(stored_random_distributions)] <- 0 #if no points were found in that soil type, it's listed as 0 points, not NA
+}
 
-sandy_water_0.5 <- random_pop_soils_function$plot_list$`Distance to Coast_Histogram`[1]$data$random_soil_means
-mean(sandy_water_0.5, na.rm = T)
+stored_random_distributions_cleaned <- data.frame(t(stored_random_distributions))
+colnames(stored_random_distributions_cleaned) <- stored_random_distributions_cleaned[1,]
+stored_random_distributions_cleaned <- stored_random_distributions_cleaned[-1,]
+rownames(stored_random_distributions_cleaned) <- NULL
+stored_random_distributions_cleaned <- mutate_all(stored_random_distributions_cleaned, function(x) as.numeric((x)))
 
+#now let's get the data on the real stuff
+#creating the dataframe that stores how many points are in each soil type for each random distribution
+stored_real_distribution <- data.frame(MUSYM = unique(soil_map_CPVT$MUSYM))
 
-# editing the histograms for the paper
-options(scipen=999)
-random_pop_soils_function$known_soil_means
-#sand available water
-sandy_water_0.5 <- random_pop_soils_function$plot_list$`Sand Available Water 0-5_Histogram`[1]$data$random_soil_means
-ggplot() +
-  geom_histogram(aes(x=random_pop_soils_function$plot_list$`Sand Available Water 0-5_Histogram`[1]$data$random_soil_means), fill = "skyblue", color = "black", bins = 20) +
-  geom_vline(xintercept=random_pop_soils_function$known_soil_means[19], col = "red") + 
-  xlab(expression(paste("Mean Sandy Available Water (cm"^3*"/cm"^3*")")))+
-  ylab("Frequency")+
-  #labs(title = "Mean Sandy Available Water (cm3/m3)") +
-  geom_text(aes(label = round(random_pop_soils_function$known_soil_means[19], 2)), 
-            x = 195, y = 75, color = "red", size= 6, family = "serif") +
-  theme_classic() +
-  xlim(c(min(sandy_water_0.5), max(sandy_water_0.5)))+ 
-  theme(title=element_text(size=15), 
-        axis.text=element_text(size=15),  axis.title.x =element_text(size= 15),
-        axis.title.y =element_text(size= 15),
-        label =element_text(size= 15, family = "serif"),
-        text = element_text(family = "serif"))
+real_249_soil_counts <- as.data.frame(CPVT_data_w_soils %>% count(MUSYM))
 
+real_249_soil_counts <- subset(real_249_soil_counts, select = -geometry) #removing the geometry column
+#why the flippity flop is it called geometry here and x above????
 
-#Volumetric Water Content -33 kPa 100-200 cm available water
-random_pop_soils_function$known_soil_means[12]
-vwc_100_200_means <- random_pop_soils_function$plot_list$`Volume of water content -33 kpa 100-200_Histogram`[1]$data$random_soil_means
-ggplot()+ 
-  geom_histogram(aes(x = random_pop_soils_function$plot_list$`Volume of water content -33 kpa 100-200_Histogram`[1]$data$random_soil_means), fill = "skyblue", color = "black", bins = 20)+
-  geom_vline(xintercept=random_pop_soils_function$known_soil_means[12], col = "red") + 
-  xlab(expression(paste("Mean Volumetric Water Content -33 kPa 100-200 cm (cm"^3*"/cm"^3*")")))+
-  ylab("Frequency")+
-  #labs(title = "VOC -33 kPa 100-200 cm") +
-  geom_text(aes(label = round(random_pop_soils_function$known_soil_means[12], 2)), 
-            x = 303, y = 125, color = "red", size= 6, family = "serif") +
-  xlim(c(min(vwc_100_200_means), max(vwc_100_200_means)))+ #230,290
-  theme_classic() +
-  theme(title=element_text(size=15), 
-        axis.text=element_text(size=15),  axis.title.x =element_text(size= 15),
-        axis.title.y =element_text(size= 15),
-        label =element_text(size= 15, family = "serif"),
-        text = element_text(family = "serif"))
+stored_real_distribution <- stored_real_distribution %>% left_join(real_249_soil_counts, by = join_by(MUSYM)) #adding the number of points in each soil category to a storing dataframe (for each iteration of random points)
 
-#Volumetric Water Content -33 kPa 0-5 cm available water
-vwc_0_5_means <- random_pop_soils_function$plot_list$`Volume of water content -33 kpa 0-5_Histogram`[1]$data$random_soil_means
-ggplot() +
-  geom_histogram(aes(x = random_pop_soils_function$plot_list$`Volume of water content -33 kpa 0-5_Histogram`[1]$data$random_soil_means), fill = "skyblue", color = "black", bins = 20) +
-  geom_vline(xintercept=random_pop_soils_function$known_soil_means[11], col = "red") + 
-  xlab(expression(paste("Mean Volumetric Water Content -33 kPa 0-5 cm (cm"^3*"/cm"^3*")")))+
-  ylab("Frequency")+
-  #labs(title = "Mean VOC -33 kPa 0-5 cm") +
-  geom_text(aes(label = round(random_pop_soils_function$known_soil_means[11], 2)), 
-            x = 287, y = 125, color = "red", size= 6, family = "serif") +
-  xlim(c(min(vwc_0_5_means), max(vwc_100_200_means)))+ #230,290
-  theme_classic() +
-  theme(title=element_text(size=15), 
-        axis.text=element_text(size=15),  axis.title.x =element_text(size= 15),
-        axis.title.y =element_text(size= 15),
-        label =element_text(size= 15, family = "serif"),
-        text = element_text(family = "serif"))
+stored_real_distribution[is.na(stored_real_distribution)] <- 0 #if no points were found in that soil type, it's listed as 0 points, not NA
 
-#TWI_Histogram
-twi_means <- random_pop_soils_function$plot_list$TWI_Histogram[1]$data$random_soil_means
-ggplot() +
-  geom_histogram(aes(x = random_pop_soils_function$plot_list$TWI_Histogram[1]$data$random_soil_means), fill = "skyblue", color = "black", bins = 20) +
-  geom_vline(xintercept=random_pop_soils_function$known_soil_means[27], col = "red") + 
-  xlab(paste0("Mean Topographic Wetness Index"))+
-  ylab("Frequency")+
-  #labs(title = "Mean Topographic Wetness Index") +
-  geom_text(aes(label = round(random_pop_soils_function$known_soil_means[27], 2)), 
-            x = 8.35, y = 125, color = "red", size= 6, family = "serif") +
-  theme_classic() +
-  xlim(c(min(twi_means), max(twi_means)))+ #230,290
-  theme(title=element_text(size=15), 
-        axis.text=element_text(size=15),  axis.title.x =element_text(size= 15),
-        axis.title.y =element_text(size= 15),
-        label =element_text(size= 15, family = "serif"),
-        text = element_text(family = "serif"))
-
-#distance to coast
-d_coast_means <- random_pop_soils_function$plot_list$`Distance to Coast_Histogram`[1]$data$random_soil_means
-ggplot() +
-  geom_histogram(aes(x=random_pop_soils_function$plot_list$`Distance to Coast_Histogram`[1]$data$random_soil_means), fill = "skyblue", color = "black", bins = 20) +
-  geom_vline(xintercept=random_pop_soils_function$known_soil_means[29], col = "red") + 
-  xlab(paste0("Mean Distance to Coast (m)"))+
-  ylab("Frequency")+
-  #labs(title = "Mean Distance to Coast") +
-  geom_text(aes(label = round(random_pop_soils_function$known_soil_means[29], 2)), 
-            x = 22000, y = 100, color = "red", size= 6, family = "serif") +
-  theme_classic() +
-  xlim(c(min(d_coast_means), max(d_coast_means)))+ #230,290
-  theme(title=element_text(size=15), 
-        axis.text=element_text(size=15),  axis.title.x =element_text(size= 15),
-        axis.title.y =element_text(size= 15),
-        label =element_text(size= 15, family = "serif"),
-        text = element_text(family = "serif"))
+stored_real_distribution_cleaned <- data.frame(t(stored_real_distribution))
+colnames(stored_real_distribution_cleaned) <- stored_real_distribution_cleaned[1,]
+stored_real_distribution_cleaned <- stored_real_distribution_cleaned[-1,]
+rownames(stored_real_distribution_cleaned) <- NULL
+# Source - https://stackoverflow.com/a/48419207
+# Posted by R. Prost, modified by community. See post 'Timeline' for change history
+# Retrieved 2026-08-05, License - CC BY-SA 4.0
+stored_real_distribution_cleaned <- mutate_all(stored_real_distribution_cleaned, function(x) as.numeric((x)))
 
 
-#### Session Info ####
-# 
-# R version 4.4.3 (2025-02-28)
-# Platform: aarch64-apple-darwin20
-# Running under: macOS Sequoia 15.2
-# 
-# Matrix products: default
-# BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib 
-# LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
-# 
-# locale:
-#   [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
-# 
-# time zone: America/New_York
-# tzcode source: internal
-# 
-# attached base packages:
-#   [1] stats     graphics  grDevices utils     datasets  methods   base     
-# 
-# other attached packages:
-#   [1] lmtest_0.9-40          zoo_1.8-15             gdalUtilities_1.2.5   
-# [4] car_3.1-5              carData_3.0-6          googledrive_2.1.1     
-# [7] spdep_1.3-10           spData_2.3.4           performance_0.16.0    
-# [10] ggsoiltexture_1.1.1    whitebox_2.4.3         spatialEco_2.0-3      
-# [13] visreg_2.7.0           MuMIn_1.48.11          plotly_4.10.4         
-# [16] mgcv_1.9-1             tmaptools_3.2          geostatsp_2.0.8       
-# [19] terra_1.8-29           Matrix_1.7-2           starsExtra_0.2.8      
-# [22] stars_0.6-8            abind_1.4-8            ggnewscale_0.5.1      
-# [25] rstatix_0.7.2          raster_3.6-32          sp_2.2-1              
-# [28] spatstat_3.3-1         spatstat.linnet_3.2-5  spatstat.model_3.3-4  
-# [31] rpart_4.1.24           spatstat.explore_3.5-2 nlme_3.1-167          
-# [34] spatstat.random_3.4-1  spatstat.geom_3.5-0    spatstat.univar_3.1-4 
-# [37] spatstat.data_3.1-6    geomtextpath_0.1.5     PMCMRplus_1.9.12      
-# [40] ggpmisc_0.6.1          ggpp_0.5.8-1           smatr_3.4-8           
-# [43] sf_1.0-24              moments_0.14.1         lubridate_1.9.4       
-# [46] forcats_1.0.0          stringr_1.6.0          dplyr_1.2.0           
-# [49] purrr_1.2.1            readr_2.2.0            tidyr_1.3.2           
-# [52] tibble_3.3.1           ggplot2_4.0.2          tidyverse_2.0.0       
-# [55] emmeans_2.0.2         
-# 
-# loaded via a namespace (and not attached):
-#   [1] RColorBrewer_1.1-3    wk_0.9.4              rstudioapi_0.18.0    
-# [4] jsonlite_2.0.0        magrittr_2.0.4        TH.data_1.1-5        
-# [7] estimability_1.5.1    spatstat.utils_3.1-5  SuppDists_1.1-9.8    
-# [10] farver_2.1.2          fs_1.6.7              vctrs_0.7.2          
-# [13] memoise_2.0.1         usethis_3.2.1         htmltools_0.5.9      
-# [16] polynom_1.4-1         curl_6.2.1            broom_1.0.12         
-# [19] s2_1.1.7              BWStest_0.2.3         Formula_1.2-5        
-# [22] KernSmooth_2.23-26    htmlwidgets_1.6.4     sandwich_3.1-1       
-# [25] cachem_1.1.0          igraph_2.2.2          lifecycle_1.0.5      
-# [28] pkgconfig_2.0.3       R6_2.6.1              fastmap_1.2.0        
-# [31] digest_0.6.39         numDeriv_2016.8-1.1   colorspace_2.1-2     
-# [34] tensor_1.5            pkgload_1.4.1         nngeo_0.4.8          
-# [37] textshaping_1.0.0     labeling_0.4.3        lwgeom_0.2-14        
-# [40] spatstat.sparse_3.1-0 timechange_0.3.0      httr_1.4.7           
-# [43] polyclip_1.10-7       compiler_4.4.3        gargle_1.5.2         
-# [46] remotes_2.5.0         proxy_0.4-27          withr_3.0.2          
-# [49] backports_1.5.0       DBI_1.2.3             pkgbuild_1.4.8       
-# [52] MASS_7.3-64           quantreg_6.1          sessioninfo_1.2.3    
-# [55] classInt_0.4-11       tools_4.4.3           units_0.8-6          
-# [58] goftest_1.2-3         glue_1.8.0            grid_4.4.3           
-# [61] generics_0.1.4        gtable_0.3.6          tzdb_0.5.0           
-# [64] class_7.3-23          data.table_1.17.0     hms_1.1.4            
-# [67] pillar_1.11.1         splines_4.4.3         lattice_0.22-9       
-# [70] survival_3.8-3        gmp_0.7-5             deldir_2.0-4         
-# [73] SparseM_1.84-2        tidyselect_1.2.1      stats4_4.4.3         
-# [76] devtools_2.4.6        stringi_1.8.7         boot_1.3-31          
-# [79] lazyeval_0.2.2        codetools_0.2-20      kSamples_1.2-10      
-# [82] multcompView_0.1-10   cli_3.6.5             xtable_1.8-4         
-# [85] systemfonts_1.2.3     munsell_0.5.1         dichromat_2.0-0.1    
-# [88] Rcpp_1.1.1            coda_0.19-4.1         XML_3.99-0.20        
-# [91] parallel_4.4.3        ellipsis_0.3.2        MatrixModels_0.5-4   
-# [94] Rmpfr_1.0-0           viridisLite_0.4.3     mvtnorm_1.3-6        
-# [97] scales_1.4.0          e1071_1.7-16          insight_1.4.6        
-# [100] crayon_1.5.3          rlang_1.1.7           multcomp_1.4-30  
-# 
+#YOU HAVE TO RUN THIS AS ONE BIG BLOCK
+real_vs_random_quantiles <- data.frame(MUSYM = unique(soil_map_CPVT$MUSYM))
+real_vs_random_quantiles <- data.frame(t(real_vs_random_quantiles))
+colnames(real_vs_random_quantiles) <- real_vs_random_quantiles[1,]
+for (i in 1:ncol(stored_random_distributions_cleaned)){
+  cat <- real_vs_random_quantiles[[i]]
+  real_vs_random_quantiles[1,i] <- ecdf(stored_random_distributions_cleaned[[cat]])(as.numeric(stored_real_distribution_cleaned[[cat]]))
+}
+#END OF BLOCK
+
+#plotting the histogram of the randomly distributed means and our real mean
+plot_out_histogram <- function(cat){
+  # Source - https://stackoverflow.com/a/36015931
+  ggplot(stored_random_distributions_cleaned, aes(x = {{cat}}))+
+    geom_histogram(fill = "dodgerblue1", color = "black")+
+    geom_vline(xintercept= as.numeric(stored_real_distribution_cleaned[[deparse(substitute(cat))]]), col = "red")+ #line of our real slope
+    labs(title = paste0("Simulated Number of butternuts in Soil ", deparse(substitute(cat)), " (n=249)"), subtitle = paste0("Quantile of real value: ", real_vs_random_quantiles[[deparse(substitute(cat))]]))+
+    theme_classic()
+}
+
+plot_out_histogram(SuD)
+plot_out_histogram(VeC)
+plot_out_histogram(AdD)
+plot_out_histogram(PaB)
+plot_out_histogram(VeB)
+plot_out_histogram(SuB)
+plot_out_histogram(SxE)
+plot_out_histogram(BlA)
+plot_out_histogram(EwA)
+plot_out_histogram(GeB)
+plot_out_histogram(HnC)
+plot_out_histogram(Cv)
+plot_out_histogram(FaC)
+plot_out_histogram(PaD)
+plot_out_histogram(PaC)
+plot_out_histogram(SxC)
+plot_out_histogram(Lh)
+plot_out_histogram(GgC)
+plot_out_histogram(SuC)
+plot_out_histogram(BlB)
+plot_out_histogram(VeD)
+#W is water; no butternuts
+plot_out_histogram(HnA)
+plot_out_histogram(HnB)
+plot_out_histogram(FsB)
+plot_out_histogram(Le)
+plot_out_histogram(MnC)
+plot_out_histogram(FaE)
+plot_out_histogram(FsE)
 
 
+#------------
+#HEALTH PLOTS
+#these next few split up our data by age, and also select all of the living trees (which have more data to their name)
+data_ILMadults_w_soil <- CPVT_data_w_soils %>% filter(seedling_or_adult == "Adult")
+data_ILMliveadults_w_soil <- data_ILMadults_w_soil %>% filter(adult_dead_or_alive == "Alive")
 
+data_ILMseedlings_w_soil <- ILM_data_w_soils %>% filter(seedling_or_adult == "Seedling")
+data_ILMliveseedlings_w_soil <- data_ILMseedlings_w_soil %>% filter(seedling_dead_or_alive == "Alive")
 
-#code graveyard
+data_CPVTadults_w_soil <- ILM_data_w_soils %>% filter(seedling_or_adult == "Adult")
+data_CPVTliveadults_w_soil <- data_CPVTadults_w_soil %>% filter(adult_dead_or_alive == "Alive")
 
+data_CPVTseedlings_w_soil <- CPVT_data_w_soils %>% filter(seedling_or_adult == "Seedling")
+data_CPVTliveseedlings_w_soil <- data_CPVTseedlings_w_soil %>% filter(seedling_dead_or_alive == "Alive")
 
-setwd("~/land_management_analysis_cfd/ILM_butternuts_with_soil_data")
-ILM_butternuts_with_soil_data <- read.csv("outputLayer.csv")
+#these plots will show any trends in health status across the two sites based on soil type
+barplot(data_CPVT_w_soil, MUSYM, "Soil at CPVT")
+barplot(data_CPVTseedlings_w_soil, MUSYM, "Soil at CPVT")
 
-setwd("~/land_management_analysis_cfd/CPVT_butternuts_with_soil_data")
-CPVT_butternuts_with_soil_data <- read.csv("outputLayer.csv")
+boxplot(data_ILMliveadults_w_soil, MUSYM, adult_percent_live_canopy, "Canopy at ILM by soil")
+boxplot(data_CPVTliveadults_w_soil, MUSYM, adult_percent_live_canopy, "Canopy at CPVT by soil")
 
-barplot(CPVT_butternuts_with_soil_data, musym, "CPVT butternuts per soil type")
-barplot(ILM_butternuts_with_soil_data, musym, "ILM butternuts per soil type")
+boxplot(data_ILMliveadults_w_soil, MUSYM, live_adult_girdle, "Girdle at ILM by soil")
+boxplot(data_CPVTliveadults_w_soil, MUSYM, live_adult_girdle, "Girdle at CPVT by soil")
 
-boxplot(ILM_butternuts_with_soil_data, musym, live_adu_5, "ILM soils and girdle")
-boxplot(CPVT_butternuts_with_soil_data, musym, live_adu_5, "CPVT soils and girdle")
+boxplot(data_ILMliveadults_w_soil, MUSYM, live_adult_purdue_canker_rating, "Purdue canker ranking at ILM by soil")
+boxplot(data_CPVTliveadults_w_soil, MUSYM, live_adult_purdue_canker_rating, "Purdue canker ranking at CPVT by soil")
 
-boxplot(ILM_butternuts_with_soil_data, musym, adult_perc, "ILM soils and percent live canopy")
-boxplot(CPVT_butternuts_with_soil_data, musym, adult_perc, "CPVT soils and percent live canopy")
+boxplot(data_ILMliveadults_w_soil, MUSYM, live_adult_purdue_canopy_ranking, "Purdue canopy ranking at ILM by soil")
+boxplot(data_CPVTliveadults_w_soil, MUSYM, live_adult_purdue_canopy_ranking, "Purdue canopy ranking at CPVT by soil")
 
-boxplot(ILM_butternuts_with_soil_data, musym, seedling_o, "ILM soils and seedlings/adults")
-boxplot(CPVT_butternuts_with_soil_data, musym, seedling_o, "CPVT soils and seedlings/adults")
-
-colnames(data)
-#the columns named live_adult through live_adu_7 are "live_adult_canker_presence"       "live_adult_callus_presence"       "live_adult_canker_base"           "live_adult_canker_1st9ft"        "live_adult_canker_1stlivebranch"  "live_adult_girdle"       "live_adult_purdue_canker_rating"  "live_adult_purdue_canopy_ranking"
-
-
-
-
+#overall soil maps
+map(data_ILM, MUSYM, TRUE, "soils at ILM")
+map(data_CPVT, MUSYM, TRUE, "soils at CPVT")
