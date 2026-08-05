@@ -31,8 +31,11 @@ library(geosphere) # for finding the distance of populations to the coast
 library(tmap) # for making beautiful maps and graphics
 
 #### Loading and processing relevant data ####
+#I will note you can save time and just load the workspace image after this script is run
+setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data")
+load("workspace_land_management.RData")
 
-setwd("~/land_management_analysis/data")
+setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data")
 ILM_fixed_field_data_processed <- read.csv("data_ILM.csv") #renames the csv created from the 2025 health data. This is the SAME data_ILM sheet (just saved as a csv) created from my script DataSplitter.R, which is found in a separate part of this same repository, so feel free to check that out, but I have the csv downloaded here for ease of use.
 #I'm essentially just renaming data_ILM.csv here to match Rebecca's original naming schema.
 
@@ -66,7 +69,7 @@ ILM_fixed_field_data_processed <- ILM_fixed_field_data_processed_sf_trans_coordi
   filter(site == "ILM") 
 
 #### Loading in the trail lines and ILM polygon, originally from ArcGIS ####
-setwd("~/land_management_analysis/data/trails_all_ILM")
+setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data/trails_all_ILM")
 trails_ILM <- st_read("BufferedFeatures.shp")
 trails_ILM <- trails_ILM$geometry[1]
 plot(trails_ILM)
@@ -78,7 +81,7 @@ trails_ILM_trans <- st_transform(trails_ILM, crs = 26918)
 trails_ILM_trans <- st_sf(geometry = trails_ILM_trans)
 
 #turning the ILM into a shapefile, to be able to visualize the point locations
-setwd("~/land_management_analysis/data/ILM_boundaries")
+setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data/ILM_boundaries")
 ILM_polygon <- read_sf("ILM_boundaries.shp")
 ILM_polygon <- st_as_sf(ILM_polygon)
 plot(ILM_polygon)
@@ -93,7 +96,7 @@ ILM_box <- st_bbox(trails_ILM_trans)
 #let's plot what we have so far!
 ggplot()+  #plotting the trail shapefile, the buffer, and the tree points
   geom_sf(data = trails_buffer_ILM)+
-  geom_sf(data = trails_ILM_trans)+ #is this working???????
+  geom_sf(data = trails_ILM_trans)+
   geom_sf(data = ILM_fixed_field_data_processed_sf)
 
 #This will make a much prettier version of the map above, because it is specifically designed to work with maps rather than plots
@@ -138,6 +141,7 @@ plot(trails_buffer_ILM_point_raster)
 
 #generating a distance to trail raster with the distances of each cell in the buffer raster from the trail edge points, and the trail raster cells are set to a distance of 0 m
 trails_buffer_ILM_point_raster[is.na(trails_buffer_ILM_point_raster[])] <- 0  #making sure the cell that are not the trail buffer multilinestring raster have a 0 value
+setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data")
 load("dist_near_trails_buffer_ILM.rData")
 #if the line above isn't working / you want to make the raster over again
 #dist_near_trails_buffer_ILM <- dist_to_nearest(trails_buffer_ILM_point_raster, trails_ILM_trans_points, progress = T) #creating a raster of the distances of each cell in the buffer raster to the linestring object of the trail polygons, this can take a while to run

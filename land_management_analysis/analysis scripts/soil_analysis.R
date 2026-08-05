@@ -28,75 +28,77 @@ ILM_data_w_soils <- st_join(ILM_fixed_field_data_processed_sf_transformed, soil_
 
 set.seed(25)
 
-#creating the dataframe that stores how many points are in each soil type for each random distribution
-stored_random_distributions <- data.frame(MUSYM = unique(soil_map_ILM$MUSYM))
-#this loop will run 1000 times (so it takes a while to run!!) and do a few things:
-#1) create a random 20 point distribution within the bounding box of ILM points
-#2) figure out what soil type each random point is on
-#3) count up the hits to each soil type
-#4) store those hits on the above dataframe
-for (y in 1:1000){ 
-  #generating and extracting the randomly distributed population soil categories
-  random_249 <- st_sample(ILM_fixed_field_data_processed_box, 249) #select random 20 points within the cropped ILM polygon
-  random_249 <- random_249 %>%
-    st_as_sf() %>% #making sure the random points are stored as simple features
-    st_transform(random_249, crs = 26918) #making sure they are in the right CRS
-  
-  random_249_soil_categories <- st_join(random_249, soil_map_ILM_transformed, join = st_intersects) #linking each random point to its soil category
-  
-  random_249_soil_counts <- as.data.frame(random_249_soil_categories %>% count(MUSYM)) #counting up how many random hits we got to each soil category
-  random_249_soil_counts <- subset(random_249_soil_counts, select = -x) #removing the geometry column
-
-  stored_random_distributions <- stored_random_distributions %>% left_join(random_249_soil_counts, by = join_by(MUSYM)) #adding the number of points in each soil category to a storing dataframe (for each iteration of random points)
-  stored_random_distributions[is.na(stored_random_distributions)] <- 0 #if no points were found in that soil type, it's listed as 0 points, not NA
-}
-
-stored_random_distributions_cleaned <- data.frame(t(stored_random_distributions))
-colnames(stored_random_distributions_cleaned) <- stored_random_distributions_cleaned[1,]
-stored_random_distributions_cleaned <- stored_random_distributions_cleaned[-1,]
-rownames(stored_random_distributions_cleaned) <- NULL
-stored_random_distributions_cleaned <- mutate_all(stored_random_distributions_cleaned, function(x) as.numeric((x)))
+#if you want to save time, you can upload the stored random distribution from here, because it takes a while to run
+setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data")
+save(ILM_stored_random_distributions_cleaned, file = "ILM_stored_random_distributions_cleaned.Rda")
+#if you want to run this by yourself:
+# #creating the dataframe that stores how many points are in each soil type for each random distribution
+# ILM_stored_random_distributions <- data.frame(MUSYM = unique(soil_map_ILM$MUSYM))
+# #this loop will run 1000 times (so it takes a while to run!!) and do a few things:
+# #1) create a random 20 point distribution within the bounding box of ILM points
+# #2) figure out what soil type each random point is on
+# #3) count up the hits to each soil type
+# #4) store those hits on the above dataframe
+# for (y in 1:1000){ 
+#   #generating and extracting the randomly distributed population soil categories
+#   random_249 <- st_sample(ILM_fixed_field_data_processed_box, 249) #select random 20 points within the cropped ILM polygon
+#   random_249 <- random_249 %>%
+#     st_as_sf() %>% #making sure the random points are stored as simple features
+#     st_transform(random_249, crs = 26918) #making sure they are in the right CRS
+#   
+#   random_249_soil_categories <- st_join(random_249, soil_map_ILM_transformed, join = st_intersects) #linking each random point to its soil category
+#   
+#   random_249_soil_counts <- as.data.frame(random_249_soil_categories %>% count(MUSYM)) #counting up how many random hits we got to each soil category
+#   random_249_soil_counts <- subset(random_249_soil_counts, select = -x) #removing the geometry column
+# 
+#   ILM_stored_random_distributions <- ILM_stored_random_distributions %>% left_join(random_249_soil_counts, by = join_by(MUSYM)) #adding the number of points in each soil category to a storing dataframe (for each iteration of random points)
+#   ILM_stored_random_distributions[is.na(ILM_stored_random_distributions)] <- 0 #if no points were found in that soil type, it's listed as 0 points, not NA
+# }
+# 
+# ILM_stored_random_distributions_cleaned <- data.frame(t(ILM_stored_random_distributions))
+# colnames(ILM_stored_random_distributions_cleaned) <- ILM_stored_random_distributions_cleaned[1,]
+# ILM_stored_random_distributions_cleaned <- ILM_stored_random_distributions_cleaned[-1,]
+# rownames(ILM_stored_random_distributions_cleaned) <- NULL
+# ILM_stored_random_distributions_cleaned <- mutate_all(ILM_stored_random_distributions_cleaned, function(x) as.numeric((x)))
 
 #now let's get the data on the real stuff
 #creating the dataframe that stores how many points are in each soil type for each random distribution
-stored_real_distribution <- data.frame(MUSYM = unique(soil_map_ILM$MUSYM))
+ILM_stored_real_distribution <- data.frame(MUSYM = unique(soil_map_ILM$MUSYM))
 
 real_249_soil_counts <- as.data.frame(ILM_data_w_soils %>% count(MUSYM))
 
 real_249_soil_counts <- subset(real_249_soil_counts, select = -geometry) #removing the geometry column
-#why the flippity flop is it called geometry here and x above????
   
-stored_real_distribution <- stored_real_distribution %>% left_join(real_249_soil_counts, by = join_by(MUSYM)) #adding the number of points in each soil category to a storing dataframe (for each iteration of random points)
+ILM_stored_real_distribution <- ILM_stored_real_distribution %>% left_join(real_249_soil_counts, by = join_by(MUSYM)) #adding the number of points in each soil category to a storing dataframe (for each iteration of random points)
 
-stored_real_distribution[is.na(stored_real_distribution)] <- 0 #if no points were found in that soil type, it's listed as 0 points, not NA
+ILM_stored_real_distribution[is.na(ILM_stored_real_distribution)] <- 0 #if no points were found in that soil type, it's listed as 0 points, not NA
 
-stored_real_distribution_cleaned <- data.frame(t(stored_real_distribution))
-colnames(stored_real_distribution_cleaned) <- stored_real_distribution_cleaned[1,]
-stored_real_distribution_cleaned <- stored_real_distribution_cleaned[-1,]
-rownames(stored_real_distribution_cleaned) <- NULL
+ILM_stored_real_distribution_cleaned <- data.frame(t(ILM_stored_real_distribution))
+colnames(ILM_stored_real_distribution_cleaned) <- ILM_stored_real_distribution_cleaned[1,]
+ILM_stored_real_distribution_cleaned <- ILM_stored_real_distribution_cleaned[-1,]
+rownames(ILM_stored_real_distribution_cleaned) <- NULL
 # Source - https://stackoverflow.com/a/48419207
 # Posted by R. Prost, modified by community. See post 'Timeline' for change history
 # Retrieved 2026-08-05, License - CC BY-SA 4.0
-stored_real_distribution_cleaned <- mutate_all(stored_real_distribution_cleaned, function(x) as.numeric((x)))
-
+ILM_stored_real_distribution_cleaned <- mutate_all(ILM_stored_real_distribution_cleaned, function(x) as.numeric((x)))
 
 #YOU HAVE TO RUN THIS AS ONE BIG BLOCK
-real_vs_random_quantiles <- data.frame(MUSYM = unique(soil_map_ILM$MUSYM))
-real_vs_random_quantiles <- data.frame(t(real_vs_random_quantiles))
-colnames(real_vs_random_quantiles) <- real_vs_random_quantiles[1,]
-for (i in 1:ncol(stored_random_distributions_cleaned)){
-  cat <- real_vs_random_quantiles[[i]]
-  real_vs_random_quantiles[1,i] <- ecdf(stored_random_distributions_cleaned[[cat]])(as.numeric(stored_real_distribution_cleaned[[cat]]))
+ILM_real_vs_random_quantiles <- data.frame(MUSYM = unique(soil_map_ILM$MUSYM))
+ILM_real_vs_random_quantiles <- data.frame(t(ILM_real_vs_random_quantiles))
+colnames(ILM_real_vs_random_quantiles) <- ILM_real_vs_random_quantiles[1,]
+for (i in 1:ncol(ILM_stored_random_distributions_cleaned)){
+  cat <- ILM_real_vs_random_quantiles[[i]]
+  ILM_real_vs_random_quantiles[1,i] <- ecdf(ILM_stored_random_distributions_cleaned[[cat]])(as.numeric(ILM_stored_real_distribution_cleaned[[cat]]))
 }
 #END OF BLOCK
 
 #plotting the histogram of the randomly distributed means and our real mean
 plot_out_histogram <- function(cat){
   # Source - https://stackoverflow.com/a/36015931
-  ggplot(stored_random_distributions_cleaned, aes(x = {{cat}}))+
+  ggplot(ILM_stored_random_distributions_cleaned, aes(x = {{cat}}))+
     geom_histogram(fill = "dodgerblue1", color = "black")+
-    geom_vline(xintercept= as.numeric(stored_real_distribution_cleaned[[deparse(substitute(cat))]]), col = "red")+ #line of our real slope
-    labs(title = paste0("Simulated Number of ILM butternuts in Soil ", deparse(substitute(cat)), " (n=249)"), subtitle = paste0("Quantile of real value: ", real_vs_random_quantiles[[deparse(substitute(cat))]]))+
+    geom_vline(xintercept= as.numeric(ILM_stored_real_distribution_cleaned[[deparse(substitute(cat))]]), col = "red")+ #line of our real slope
+    labs(title = paste0("Simulated Number of ILM butternuts in Soil ", deparse(substitute(cat)), " (n=249)"), subtitle = paste0("Quantile of real value: ", ILM_real_vs_random_quantiles[[deparse(substitute(cat))]]))+
     theme_classic()
 }
 
@@ -110,7 +112,7 @@ plot_out_histogram(CbA)
 plot_out_histogram(KbA)
 plot_out_histogram(AaB)
 plot_out_histogram(BdB)
-plot_out_histogram(CdB)
+plot_out_histogram(CbB)
 plot_out_histogram(BdD)
 plot_out_histogram(KaC)
 plot_out_histogram(BcC)
@@ -138,77 +140,82 @@ CPVT_data_w_soils <- st_join(CPVT_fixed_field_data_processed_sf_transformed, soi
 
 #RANDOM POINT ANALYSIS
 
-set.seed(25)
+#I recommend just loading in this data as it takes a while to load
+setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data")
+load("CPVT_stored_random_distributions_cleaned.Rda")
 
-#creating the dataframe that stores how many points are in each soil type for each random distribution
-stored_random_distributions <- data.frame(MUSYM = unique(soil_map_CPVT$MUSYM))
-#this loop will run 1000 times (so it takes a while to run!!) and do a few things:
-#1) create a random 20 point distribution within the bounding box of CPVT points
-#2) figure out what soil type each random point is on
-#3) count up the hits to each soil type
-#4) store those hits on the above dataframe
-for (y in 1:1000){ 
-  #generating and extracting the randomly distributed population soil categories
-  random_163 <- st_sample(CPVT_fixed_field_data_processed_box, 163) #select random 20 points within the cropped CPVT polygon
-  random_163 <- random_163 %>%
-    st_as_sf() %>% #making sure the random points are stored as simple features
-    st_transform(random_163, crs = 26918) #making sure they are in the right CRS
-  
-  random_163_soil_categories <- st_join(random_163, soil_map_CPVT_transformed, join = st_intersects) #linking each random point to its soil category
-  
-  random_163_soil_counts <- as.data.frame(random_163_soil_categories %>% count(MUSYM)) #counting up how many random hits we got to each soil category
-  random_163_soil_counts <- subset(random_163_soil_counts, select = -x) #removing the geometry column
-  
-  stored_random_distributions <- stored_random_distributions %>% left_join(random_163_soil_counts, by = join_by(MUSYM)) #adding the number of points in each soil category to a storing dataframe (for each iteration of random points)
-  stored_random_distributions[is.na(stored_random_distributions)] <- 0 #if no points were found in that soil type, it's listed as 0 points, not NA
-}
-
-stored_random_distributions_cleaned <- data.frame(t(stored_random_distributions))
-colnames(stored_random_distributions_cleaned) <- stored_random_distributions_cleaned[1,]
-stored_random_distributions_cleaned <- stored_random_distributions_cleaned[-1,]
-rownames(stored_random_distributions_cleaned) <- NULL
-stored_random_distributions_cleaned <- mutate_all(stored_random_distributions_cleaned, function(x) as.numeric((x)))
+# #If you want to rerun the dataset
+# set.seed(25)
+# 
+# #creating the dataframe that stores how many points are in each soil type for each random distribution
+# CPVT_stored_random_distributions <- data.frame(MUSYM = unique(soil_map_CPVT$MUSYM))
+# #this loop will run 1000 times (so it takes a while to run!!) and do a few things:
+# #1) create a random 20 point distribution within the bounding box of CPVT points
+# #2) figure out what soil type each random point is on
+# #3) count up the hits to each soil type
+# #4) store those hits on the above dataframe
+# for (y in 1:1000){
+#   #generating and extracting the randomly distributed population soil categories
+#   random_163 <- st_sample(CPVT_fixed_field_data_processed_box, 163) #select random 20 points within the cropped CPVT polygon
+#   random_163 <- random_163 %>%
+#     st_as_sf() %>% #making sure the random points are stored as simple features
+#     st_transform(random_163, crs = 26918) #making sure they are in the right CRS
+# 
+#   random_163_soil_categories <- st_join(random_163, soil_map_CPVT_transformed, join = st_intersects) #linking each random point to its soil category
+# 
+#   random_163_soil_counts <- as.data.frame(random_163_soil_categories %>% count(MUSYM)) #counting up how many random hits we got to each soil category
+#   random_163_soil_counts <- subset(random_163_soil_counts, select = -x) #removing the geometry column
+# 
+#   CPVT_stored_random_distributions <- CPVT_stored_random_distributions %>% left_join(random_163_soil_counts, by = join_by(MUSYM)) #adding the number of points in each soil category to a storing dataframe (for each iteration of random points)
+#   CPVT_stored_random_distributions[is.na(CPVT_stored_random_distributions)] <- 0 #if no points were found in that soil type, it's listed as 0 points, not NA
+# }
+# 
+# CPVT_stored_random_distributions_cleaned <- data.frame(t(CPVT_stored_random_distributions))
+# colnames(CPVT_stored_random_distributions_cleaned) <- CPVT_stored_random_distributions_cleaned[1,]
+# CPVT_stored_random_distributions_cleaned <- CPVT_stored_random_distributions_cleaned[-1,]
+# rownames(CPVT_stored_random_distributions_cleaned) <- NULL
+# CPVT_stored_random_distributions_cleaned <- mutate_all(CPVT_stored_random_distributions_cleaned, function(x) as.numeric((x)))
 
 #now let's get the data on the real stuff
 #creating the dataframe that stores how many points are in each soil type for each random distribution
-stored_real_distribution <- data.frame(MUSYM = unique(soil_map_CPVT$MUSYM))
+CPVT_stored_real_distribution <- data.frame(MUSYM = unique(soil_map_CPVT$MUSYM))
 
 real_163_soil_counts <- as.data.frame(CPVT_data_w_soils %>% count(MUSYM))
 
 real_163_soil_counts <- subset(real_163_soil_counts, select = -geometry) #removing the geometry column
 #why the flippity flop is it called geometry here and x above????
 
-stored_real_distribution <- stored_real_distribution %>% left_join(real_163_soil_counts, by = join_by(MUSYM)) #adding the number of points in each soil category to a storing dataframe (for each iteration of random points)
+CPVT_stored_real_distribution <- CPVT_stored_real_distribution %>% left_join(real_163_soil_counts, by = join_by(MUSYM)) #adding the number of points in each soil category to a storing dataframe (for each iteration of random points)
 
-stored_real_distribution[is.na(stored_real_distribution)] <- 0 #if no points were found in that soil type, it's listed as 0 points, not NA
+CPVT_stored_real_distribution[is.na(CPVT_stored_real_distribution)] <- 0 #if no points were found in that soil type, it's listed as 0 points, not NA
 
-stored_real_distribution_cleaned <- data.frame(t(stored_real_distribution))
-colnames(stored_real_distribution_cleaned) <- stored_real_distribution_cleaned[1,]
-stored_real_distribution_cleaned <- stored_real_distribution_cleaned[-1,]
-rownames(stored_real_distribution_cleaned) <- NULL
+CPVT_stored_real_distribution_cleaned <- data.frame(t(CPVT_stored_real_distribution))
+colnames(CPVT_stored_real_distribution_cleaned) <- CPVT_stored_real_distribution_cleaned[1,]
+CPVT_stored_real_distribution_cleaned <- CPVT_stored_real_distribution_cleaned[-1,]
+rownames(CPVT_stored_real_distribution_cleaned) <- NULL
 # Source - https://stackoverflow.com/a/48419207
 # Posted by R. Prost, modified by community. See post 'Timeline' for change history
 # Retrieved 2026-08-05, License - CC BY-SA 4.0
-stored_real_distribution_cleaned <- mutate_all(stored_real_distribution_cleaned, function(x) as.numeric((x)))
+CPVT_stored_real_distribution_cleaned <- mutate_all(CPVT_stored_real_distribution_cleaned, function(x) as.numeric((x)))
 
 
 #YOU HAVE TO RUN THIS AS ONE BIG BLOCK
-real_vs_random_quantiles <- data.frame(MUSYM = unique(soil_map_CPVT$MUSYM))
-real_vs_random_quantiles <- data.frame(t(real_vs_random_quantiles))
-colnames(real_vs_random_quantiles) <- real_vs_random_quantiles[1,]
-for (i in 1:ncol(stored_random_distributions_cleaned)){
-  cat <- real_vs_random_quantiles[[i]]
-  real_vs_random_quantiles[1,i] <- ecdf(stored_random_distributions_cleaned[[cat]])(as.numeric(stored_real_distribution_cleaned[[cat]]))
+CPVT_real_vs_random_quantiles <- data.frame(MUSYM = unique(soil_map_CPVT$MUSYM))
+CPVT_real_vs_random_quantiles <- data.frame(t(CPVT_real_vs_random_quantiles))
+colnames(CPVT_real_vs_random_quantiles) <- CPVT_real_vs_random_quantiles[1,]
+for (i in 1:ncol(CPVT_stored_random_distributions_cleaned)){
+  cat <- CPVT_real_vs_random_quantiles[[i]]
+  CPVT_real_vs_random_quantiles[1,i] <- ecdf(CPVT_stored_random_distributions_cleaned[[cat]])(as.numeric(CPVT_stored_real_distribution_cleaned[[cat]]))
 }
 #END OF BLOCK
 
 #plotting the histogram of the randomly distributed means and our real mean
 plot_out_histogram <- function(cat){
   # Source - https://stackoverflow.com/a/36015931
-  ggplot(stored_random_distributions_cleaned, aes(x = {{cat}}))+
+  ggplot(CPVT_stored_random_distributions_cleaned, aes(x = {{cat}}))+
     geom_histogram(fill = "dodgerblue1", color = "black")+
-    geom_vline(xintercept= as.numeric(stored_real_distribution_cleaned[[deparse(substitute(cat))]]), col = "red")+ #line of our real slope
-    labs(title = paste0("Simulated Number of CPVT butternuts in Soil ", deparse(substitute(cat)), " (n=163)"), subtitle = paste0("Quantile of real value: ", real_vs_random_quantiles[[deparse(substitute(cat))]]))+
+    geom_vline(xintercept= as.numeric(CPVT_stored_real_distribution_cleaned[[deparse(substitute(cat))]]), col = "red")+ #line of our real slope
+    labs(title = paste0("Simulated Number of CPVT butternuts in Soil ", deparse(substitute(cat)), " (n=163)"), subtitle = paste0("Quantile of real value: ", CPVT_real_vs_random_quantiles[[deparse(substitute(cat))]]))+
     theme_classic()
 }
 
