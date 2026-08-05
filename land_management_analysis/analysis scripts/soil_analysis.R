@@ -14,6 +14,7 @@ library(spatstat) # to run the nndist function
 library(raster) #to plot rasters
 library(rstatix) #to run the Games-Howell Test
 library(ggnewscale) #to be able to assign different colors to different layered rasters
+library(EnvStats) #to show sample size for boxplots and such!
 
 #soil data brought to you by https://websoilsurvey.nrcs.usda.gov/app/WebSoilSurvey.aspx
 setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data/wss_aoi_2026_ILM/spatial")
@@ -249,8 +250,19 @@ plot_out_histogram(MnC)
 plot_out_histogram(FaE)
 plot_out_histogram(FsE)
 
-
 #------------
+#Plots
+#overall soil maps
+tm_shape(ILM_polygon) +
+  tm_polygons() +
+  tm_shape(ILM_data_w_soils) +
+  tm_dots("MUSYM")
+
+tm_shape(CPVT_polygon) +
+  tm_polygons() +
+  tm_shape(CPVT_data_w_soils) +
+  tm_dots("MUSYM")
+
 #HEALTH PLOTS
 #these next few split up our data by age, and also select all of the living trees (which have more data to their name)
 data_ILMadults_w_soil <- CPVT_data_w_soils %>% filter(seedling_or_adult == "Adult")
@@ -265,22 +277,22 @@ data_CPVTliveadults_w_soil <- data_CPVTadults_w_soil %>% filter(adult_dead_or_al
 data_CPVTseedlings_w_soil <- CPVT_data_w_soils %>% filter(seedling_or_adult == "Seedling")
 data_CPVTliveseedlings_w_soil <- data_CPVTseedlings_w_soil %>% filter(seedling_dead_or_alive == "Alive")
 
+#let's just see how many butternuts we have at each soil type
+barplot(ILM_data_w_soils, MUSYM, "Soil at ILM")
+barplot(data_ILMseedlings_w_soil, MUSYM, "Soil for ILM seedlings")
+
+barplot(CPVT_data_w_soils, MUSYM, "Soil at CPVT")
+barplot(data_CPVTseedlings_w_soil, MUSYM, "Soil for CPVT seedlings")
+
 #these plots will show any trends in health status across the two sites based on soil type
-barplot(data_CPVT_w_soil, MUSYM, "Soil at CPVT")
-barplot(data_CPVTseedlings_w_soil, MUSYM, "Soil at CPVT")
+boxplot(data_ILMliveadults_w_soil, MUSYM, adult_percent_live_canopy, "Canopy at ILM by soil") + stat_n_text()
+boxplot(data_CPVTliveadults_w_soil, MUSYM, adult_percent_live_canopy, "Canopy at CPVT by soil") + stat_n_text()
 
-boxplot(data_ILMliveadults_w_soil, MUSYM, adult_percent_live_canopy, "Canopy at ILM by soil")
-boxplot(data_CPVTliveadults_w_soil, MUSYM, adult_percent_live_canopy, "Canopy at CPVT by soil")
+boxplot(data_ILMliveadults_w_soil, MUSYM, live_adult_girdle, "Girdle at ILM by soil") + stat_n_text()
+boxplot(data_CPVTliveadults_w_soil, MUSYM, live_adult_girdle, "Girdle at CPVT by soil") + stat_n_text()
 
-boxplot(data_ILMliveadults_w_soil, MUSYM, live_adult_girdle, "Girdle at ILM by soil")
-boxplot(data_CPVTliveadults_w_soil, MUSYM, live_adult_girdle, "Girdle at CPVT by soil")
+boxplot(data_ILMliveadults_w_soil, MUSYM, live_adult_purdue_canker_rating, "Purdue canker ranking at ILM by soil") + stat_n_text()
+boxplot(data_CPVTliveadults_w_soil, MUSYM, live_adult_purdue_canker_rating, "Purdue canker ranking at CPVT by soil") + stat_n_text()
 
-boxplot(data_ILMliveadults_w_soil, MUSYM, live_adult_purdue_canker_rating, "Purdue canker ranking at ILM by soil")
-boxplot(data_CPVTliveadults_w_soil, MUSYM, live_adult_purdue_canker_rating, "Purdue canker ranking at CPVT by soil")
-
-boxplot(data_ILMliveadults_w_soil, MUSYM, live_adult_purdue_canopy_ranking, "Purdue canopy ranking at ILM by soil")
-boxplot(data_CPVTliveadults_w_soil, MUSYM, live_adult_purdue_canopy_ranking, "Purdue canopy ranking at CPVT by soil")
-
-#overall soil maps
-map(data_ILM, MUSYM, TRUE, "soils at ILM")
-map(data_CPVT, MUSYM, TRUE, "soils at CPVT")
+boxplot(data_ILMliveadults_w_soil, MUSYM, live_adult_purdue_canopy_ranking, "Purdue canopy ranking at ILM by soil") + stat_n_text()
+boxplot(data_CPVTliveadults_w_soil, MUSYM, live_adult_purdue_canopy_ranking, "Purdue canopy ranking at CPVT by soil") + stat_n_text()
