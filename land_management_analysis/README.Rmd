@@ -16,9 +16,40 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This code involves quite a few packages, which are called at the beginning of each script 
 
+## Usage of data
+
+There are three CSVs of our health assessment data in the folder /data: data_ILM, data_CPVT, and data_liveseedlings.
+
+The shapefiles that we pull from are stored in their own folders in /data.
+
+The polygons encompassing each site are stored in:
+CPVT_boundary (look for .shp, though .shx is required to load it)
+ILM_boundaries
+
+The trail networks are stored:
+trails_all_ILM (BufferedFeatures.shp)
+trails_all_CPVT (also BufferedFeatures.shp)
+
+The soils maps are stored in:
+wss_aoi_2026_CPVT (soilmu.aoi.shp is what we use, as it just simply lists the polygons and their soil category (MUSYM))
+wss_aoi_2026_ILM (soilmu.aoi.shp as well, so make sure you are in the right directory)
+
+In addition, some files are created in DataProcessing or soil_analysis but take a long time to run, and so are stored as .rData files for your convenience.  These are:
+
+dist_near_trails_buffer_CPVT
+dist_near_trails_buffer_ILM
+dist_near_trails_fixed_box_CPVT
+dist_near_trails_fixed_box_ILM
+
+All rasters of distance values to the trails, either in a buffer around the trails (buffer) or in the whole bounding box surrounding the butternut occurrences (fixed_box).
+
+If you don't want to run DataProcessing.R at all, you can also just load in workplace_land_management.Rdata which loads in all the created layers and dataframes.
+
+
 ## Usage of scripts
 
-Data processing
+DataProcessing.R
+
 	Create shapefiles of:
 	Butternut trees ([site]_fixed_field_data_processed, for both ILM and CPVT)
 	Trail network (trails_[site])
@@ -58,17 +89,3 @@ load in the butternut data and soil data
 join the butternut data with soils (intersect) to assign each butternut to its soil class, and sum up how many butternuts we see (out of all of them sitewide) in each soil type
 create 1000 random distributions of butternuts (with each simulation having the number of butternuts that we have in our real sample, e.g. for CPVT and ILM) across the bounding box of butternuts found (created on the boundary extent of the butternut points), and assign those their soil types as well. I count up how many butternuts were found in that soil type in a dataframe, and I store all of this information in a larger dataframe ([site]_stored_random_distributions_cleaned, which is preloaded on the Github for ease of use)
 I then create histograms of the spread of counts of simulated butternuts that are placed infor each soil type, and draw in the actual count seen in that soil type with the real butternut distribution in a red line.  I also have the quantile written in the subtitle to get a better sense of where that value lies.
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
