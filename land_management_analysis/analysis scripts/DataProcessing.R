@@ -31,11 +31,16 @@ library(geosphere) # for finding the distance of populations to the coast
 library(tmap) # for making beautiful maps and graphics
 
 #### Loading and processing relevant data ####
-#I will note you can save time and just load the workspace image after this script is run
-setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data")
-load("workspace_land_management.RData")
 
-setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data")
+#set this to be YOUR working directory path before starting!!!
+working_directory <- "~/GitHub/butternut-health-assessment-2025/land_management_analysis/"
+#I will note you can save time and just load the workspace image after this script is run
+#setwd(working_directory)
+#setwd("data")
+#load("workspace_land_management.RData")
+
+setwd(working_directory)
+setwd("data")
 ILM_fixed_field_data_processed <- read.csv("data_ILM.csv") #renames the csv created from the 2025 health data. This is the SAME data_ILM sheet (just saved as a csv) created from my script DataSplitter.R, which is found in a separate part of this same repository, so feel free to check that out, but I have the csv downloaded here for ease of use.
 #I'm essentially just renaming data_ILM.csv here to match Rebecca's original naming schema.
 
@@ -69,7 +74,8 @@ ILM_fixed_field_data_processed <- ILM_fixed_field_data_processed_sf_trans_coordi
   filter(site == "ILM") 
 
 #### Loading in the trail lines and ILM polygon, originally from ArcGIS ####
-setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data/trails_all_ILM")
+setwd(working_directory)
+setwd("data/trails_all_ILM")
 trails_ILM <- st_read("BufferedFeatures.shp")
 trails_ILM <- trails_ILM$geometry[1]
 plot(trails_ILM)
@@ -81,7 +87,8 @@ trails_ILM_trans <- st_transform(trails_ILM, crs = 26918)
 trails_ILM_trans <- st_sf(geometry = trails_ILM_trans)
 
 #turning the ILM into a shapefile, to be able to visualize the point locations
-setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data/ILM_boundaries")
+setwd(working_directory)
+setwd("data/ILM_boundaries")
 ILM_polygon <- read_sf("ILM_boundaries.shp")
 ILM_polygon <- st_as_sf(ILM_polygon)
 plot(ILM_polygon)
@@ -124,7 +131,6 @@ ggplot(ILM_fixed_field_data_processed) + #DBH
 
 #---------------------------------
 #Distance-to-trail raster building
-#THIS TAKES A LONG TIME TO RUN!!!!
 
 #Creating distance to trail calculations!
 #turning the trail polygons into multilinestring objects and then into a raster, to be able to later calculate the distances
@@ -141,7 +147,8 @@ plot(trails_buffer_ILM_point_raster)
 
 #generating a distance to trail raster with the distances of each cell in the buffer raster from the trail edge points, and the trail raster cells are set to a distance of 0 m
 trails_buffer_ILM_point_raster[is.na(trails_buffer_ILM_point_raster[])] <- 0  #making sure the cell that are not the trail buffer multilinestring raster have a 0 value
-setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data")
+setwd(working_directory)
+setwd("data")
 load("dist_near_trails_buffer_ILM.rData")
 #if the line above isn't working / you want to make the raster over again
 #dist_near_trails_buffer_ILM <- dist_to_nearest(trails_buffer_ILM_point_raster, trails_ILM_trans_points, progress = T) #creating a raster of the distances of each cell in the buffer raster to the linestring object of the trail polygons, this can take a while to run
@@ -189,8 +196,8 @@ ILM_fixed_field_data_processed_distance <- ILM_fixed_field_data_processed_distan
 #----
 
 #### Loading and processing relevant data ####
-
-setwd("~/land_management_analysis/data")
+setwd(working_directory)
+setwd("data")
 CPVT_fixed_field_data_processed <- read.csv("data_CPVT.csv") #renames the csv created from the 2025 health data. This is the SAME data_CPVT sheet (just saved as a csv) created from my script DataSplitter.R, which is found in a separate part of this same repository, so feel free to check that out, but I have the csv downloaded here for ease of use.
 #I'm essentially just renaming data_CPVT.csv here to match Rebecca's original naming schema.
 
@@ -224,7 +231,8 @@ CPVT_fixed_field_data_processed <- CPVT_fixed_field_data_processed_sf_trans_coor
   filter(site == "CPVT") 
 
 #### Loading in the trail lines and CPVT polygon, originally from ArcGIS ####
-setwd("~/land_management_analysis/data/trails_all_CPVT")
+setwd(working_directory)
+setwd("data/trails_all_CPVT")
 trails_CPVT <- st_read("BufferedFeatures.shp")
 trails_CPVT <- trails_CPVT$geometry[1]
 plot(trails_CPVT)
@@ -236,7 +244,8 @@ trails_CPVT_trans <- st_transform(trails_CPVT, crs = 26918)
 trails_CPVT_trans <- st_sf(geometry = trails_CPVT_trans)
 
 #turning the CPVT into a shapefile, to be able to visualize the point locations
-setwd("~/land_management_analysis/data/CPVT_boundary")
+setwd(working_directory)
+setwd("data/CPVT_boundary")
 CPVT_polygon <- read_sf("CPVT_boundary.shp")
 CPVT_polygon <- st_as_sf(CPVT_polygon)
 plot(CPVT_polygon)
@@ -279,7 +288,6 @@ ggplot(CPVT_fixed_field_data_processed) + #DBH
 
 #---------------------------------
 #Distance-to-trail raster building
-#THIS TAKES A LONG TIME TO RUN!!!!
 
 #Creating distance to trail calculations!
 #turning the trail polygons into multilinestring objects and then into a raster, to be able to later calculate the distances
@@ -296,6 +304,8 @@ plot(trails_buffer_CPVT_point_raster)
 
 #generating a distance to trail raster with the distances of each cell in the buffer raster from the trail edge points, and the trail raster cells are set to a distance of 0 m
 trails_buffer_CPVT_point_raster[is.na(trails_buffer_CPVT_point_raster[])] <- 0  #making sure the cell that are not the trail buffer multilinestring raster have a 0 value
+setwd(working_directory)
+setwd("data")
 load("dist_near_trails_buffer_CPVT.rData")
 #dist_near_trails_buffer_CPVT <- dist_to_nearest(trails_buffer_CPVT_point_raster, trails_CPVT_trans_points, progress = T) #creating a raster of the distances of each cell in the buffer raster to the linestring object of the trail polygons, this can take a while to run
 #save(dist_near_trails_buffer_CPVT, file="dist_near_trails_buffer_CPVT.rData")

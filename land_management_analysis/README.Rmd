@@ -18,7 +18,7 @@ This code involves quite a few packages, which are called at the beginning of ea
 
 ## Usage of data
 
-There are three CSVs of our health assessment data in the folder /data: data_ILM, data_CPVT, and data_liveseedlings.
+There are three CSVs of our health assessment data in the folder /data: data_ILM, data_CPVT, and data_liveseedlings.  They list out all of our health assessment data for these categories, and can also be created from DataSplitter.R in my other folder/project, health-assessment-2025.
 
 The shapefiles that we pull from are stored in their own folders in /data.
 
@@ -50,7 +50,7 @@ If you don't want to run DataProcessing.R at all, you can also just load in work
 
 DataProcessing.R
 
-	Create shapefiles of:
+Create shapefiles of:
 	Butternut trees ([site]_fixed_field_data_processed, for both ILM and CPVT)
 	Trail network (trails_[site])
 	Site boundaries ([site]_polygon)
@@ -58,34 +58,34 @@ DataProcessing.R
 	Bounding boxes around my butternut trees ([site]_box, and [site]_fixed_field_data_processed_box when I am using the UTM 18 projection)
 	Distance Rasters of the site, showing how far each point is from a trail (dist_near_trails_[site] and dist_near_trails_buffer_[site])
 
-Butternut distribution modelling
+Butternut_distribution_testing
 	In this script I:
-load in the bounding box for each site ([site]_fixed_field_data_processed_box) and create a convex hull (trails_[site]_convex_hull) around the butternut trees.  I do not use a buffer around the trails because my trail network is not the right shape for that.
-I calculate Ripley's K (Kest, correction = "Ripley")  around the bounding box/convex hull by running a Poisson Point Process (ppp) around the butternut coordinates
-plot Ripley's K of our known points (black line) and the randomized points (red line)
-Calculate Average Nearest Neighbor (ANN) Value for the trees of a population
-imulate a randomized distribution of points in same CRS, calculate and store the average nearest neighbor, 599 times
-Plot the Randomized Points, convex hull, and trail shapefiles
-Plot the histogram of simulated randomized average nearest neighbor values with a line for the actual ANN value
-Calculate and store the p-value 
-I then do another ANN analysis when controlling for the trail
-Then we do a Poison Point Model (ppm()) for our null hypothesis (trails do not influence location of butternuts) and alternative hypothesis (trails do influence the location of butternuts), and then compare them with an ANOVA likelihood ratio test
+1) load in the bounding box for each site ([site]_fixed_field_data_processed_box) and create a convex hull (trails_[site]_convex_hull) around the butternut trees.  I do not use a buffer around the trails because my trail network is not the right shape for that.
+2) I calculate Ripley's K (Kest, correction = "Ripley")  around the bounding box/convex hull by running a Poisson Point Process (ppp) around the butternut coordinates
+3) plot Ripley's K of our known points (black line) and the randomized points (red line)
+4) Calculate Average Nearest Neighbor (ANN) Value for the trees of a population
+5) simulate a randomized distribution of points in same CRS, calculate and store the average nearest neighbor, 599 times
+6) Plot the Randomized Points, convex hull, and trail shapefiles
+7) Plot the histogram of simulated randomized average nearest neighbor values with a line for the actual ANN value
+8) Calculate and store the p-value 
+9) I then do another ANN analysis when controlling for the trail
+10) Then we do a Poison Point Model (ppm()) for our null hypothesis (trails do not influence location of butternuts) and alternative hypothesis (trails do influence the location of butternuts), and then compare them with an ANOVA likelihood ratio test
 
-Moran's I
+morans_i.R
 	In this script I determine if there is spatial autocorrelation in health metrics (% live canopy) and canker (% girdle) with global and local Moran's I.  We create a matrix with all the trees' locations, calculate the nearest neighbor distances, and calculate the average health metrics for the neighboring trees of each tree (Rebecca refers to this as the "Lagged" metric).  Then, you create a regression model (lm) that compares a tree's health metric (canker or canopy) to that average of its nearest neighbors.  Global Moran's I looks at the strength and direction of this relationship, and the significance of the value was tested here with a moran.mc (monte-carlo) simulation.  Then we look at the Local Moran's I, and simulate the health metrics that could be for the neighboring trees with localmoran_perm (and store them in a dataframe).  The results are then stored in a list (aptly labelled results), with the lagged metric, regression, local moran, and the significance.  The Moran's I values are then plotted in a bunch of different ways:
-local Moran's versus expected Moran's I
-maps of the butternuts colored by Moran's I p values
-and the values of the health metrics of those that were significant
+1) local Moran's versus expected Moran's I
+2) maps of the butternuts colored by Moran's I p values
+3) and the values of the health metrics of those that were significant
 
-Mowing plots
+mowing_plots.R
 	This script helps us visualize the differences between seedlings that have experienced mowing damage and those that have not.
 	I create subgroups of the seedling data based on germination year, then within germination years 
 
 	What would be nice to do on this at a later point is see if the seedlings that have experienced mowing damage are closer to trails than the average seedling, to see if the mowing damage is concentrated near there or if it can occur anywhere in the site for site maintenance.  It might be a bit challenging because pretty much all of the seedlings (esp. at CPVT) are extremely close to trails.
 
-Soil Analysis
+soil_analysis.R
 	This code analyzes the distribution of butternuts across different soil types as laid out by the USDA WSS. I:
-load in the butternut data and soil data
-join the butternut data with soils (intersect) to assign each butternut to its soil class, and sum up how many butternuts we see (out of all of them sitewide) in each soil type
-create 1000 random distributions of butternuts (with each simulation having the number of butternuts that we have in our real sample, e.g. for CPVT and ILM) across the bounding box of butternuts found (created on the boundary extent of the butternut points), and assign those their soil types as well. I count up how many butternuts were found in that soil type in a dataframe, and I store all of this information in a larger dataframe ([site]_stored_random_distributions_cleaned, which is preloaded on the Github for ease of use)
-I then create histograms of the spread of counts of simulated butternuts that are placed infor each soil type, and draw in the actual count seen in that soil type with the real butternut distribution in a red line.  I also have the quantile written in the subtitle to get a better sense of where that value lies.
+1) load in the butternut data and soil data
+2) join the butternut data with soils (intersect) to assign each butternut to its soil class, and sum up how many butternuts we see (out of all of them sitewide) in each soil type
+3) create 1000 random distributions of butternuts (with each simulation having the number of butternuts that we have in our real sample, e.g. for CPVT and ILM) across the bounding box of butternuts found (created on the boundary extent of the butternut points), and assign those their soil types as well. I count up how many butternuts were found in that soil type in a dataframe, and I store all of this information in a larger dataframe ([site]_stored_random_distributions_cleaned, which is preloaded on the Github for ease of use)
+4) I then create histograms of the spread of counts of simulated butternuts that are placed in each soil type, and draw in the actual count seen in that soil type with the real butternut distribution in a red line.  I also have the quantile written in the subtitle to get a better sense of where that value lies.

@@ -21,7 +21,30 @@ library(tmap) #to make maps
 working_directory <- "~/GitHub/butternut-health-assessment-2025/land_management_analysis"
 setwd(working_directory)
 
+#from my code ChartBuilder.R, a function that makes easy maps
+map <- function(data, colorz, legend_yn, title)
+  ggplot(data, aes(gps_w, gps_n)) +
+  geom_point(aes(color = {{ colorz }}), show.legend = legend_yn) +
+  ggtitle(title)
+
+#and boxplots and barplots!!
+boxplot <- function(data, plot_division, metric, title){
+  ggplot(data, aes(x=factor({{plot_division}}), y={{metric}})) +
+    geom_boxplot(alpha = 0, aes(color = {{plot_division}})) +
+    geom_jitter(height = 0, alpha = 0.25, size = 0.5, width = 0.3) +
+    #stat_n_text() +
+    ggtitle(title)
+}
+
+barplot <- function(data, variable, title){
+  ggplot(data, aes({{variable}})) +
+    geom_bar()+
+    #stat_n_text() +
+    ggtitle(title)
+}
+
 #soil data brought to you by https://websoilsurvey.nrcs.usda.gov/app/WebSoilSurvey.aspx
+setwd(working_directory)
 setwd("data/wss_aoi_2026_ILM/spatial")
 soil_map_ILM <- st_read("soilmu_a_aoi.shp", crs = 4326)
 soil_map_ILM_transformed <- st_crop(st_transform(soil_map_ILM, crs = 26918), ILM_fixed_field_data_processed_box)

@@ -2,16 +2,29 @@
 #Mowing plots
 #This script creates the plots comparing seedlings with and without mowing damage.
 #This was intended to help land managers understand the impacts of mowing on butternut seedlings.  Do the benefits (increased light availability for butternut regeneration) outweigh the costs (mowing down new growth in unprotected butternut seedlings?)
-
+library(dplyr)
+library(ggplot2)
 library(EnvStats)
 
 #You will need the dataframe liveseedlings, which is a set of all living seedlings across two VT sites (ILM and CPVT)
 #this should be populated from DataSplitter; alternatively, it can be uploaded from the CSV saved to this directory
-setwd("/land_management_analysis/data")
+#set this to be YOUR working directory path before starting!!!
+working_directory <- "~/GitHub/butternut-health-assessment-2025/land_management_analysis/"
+setwd(working_directory)
+setwd("data")
 data_liveseedlings <- read.csv("data_liveseedlings.csv")
 
+#from my other code ChartBuilder.R, a function to make simple boxplots
+boxplot <- function(data, plot_division, metric, title){
+  ggplot(data, aes(x=factor({{plot_division}}), y={{metric}})) +
+    geom_boxplot(alpha = 0, aes(color = {{plot_division}})) +
+    geom_jitter(height = 0, alpha = 0.25, size = 0.5, width = 0.3) +
+    #stat_n_text() +
+    ggtitle(title)
+}
+
 #plotting the height of seedlings that have sustained mowing damage (mowing = TRUE) against those that have not sustained any mowing damage (FALSE)
-ggplot(data = data_liveseedlings, aes(x = height_ft, y= mowing)) +
+ggplot(data = data_liveseedlings, aes(x = mowing, y= height_ft)) +
   geom_boxplot(alpha = 0, aes(color = mowing)) +
   geom_jitter(height = 0, alpha = 0.25, size = 0.5, width = 0.3) +
   stat_n_text() +
