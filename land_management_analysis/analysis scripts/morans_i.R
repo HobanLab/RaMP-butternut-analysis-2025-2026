@@ -76,7 +76,7 @@ knn.dist <- dnearneigh(tree.coord.matrix, d1 = 0, d2 = (40*mean(dataframe$adult_
 lw.dist <- nb2listwdist(knn.dist, dataframe, type="idw", style="W", #fixed_field_data_processed_sf_trans_coordinates
                         alpha = 1, dmax = NULL, longlat = NULL, zero.policy=T) # had to set zero.policy to true because of empty neighbor sets
 
-#creating lags for each tree, which computes the average neighboring size metric for each tree
+#creating lags for each tree, which computes the average neighboring health metric for each tree
 dataframe$lag.metric <- lag.listw(lw.dist, dataframe$adult_percent_live_canopy)
 
 # Create a regression model of the lagged response variable (average amongst closest trees) vs. the known response variable 
@@ -104,7 +104,7 @@ printout <- tidy(global.moran.I$I, conf.int=TRUE)
 #setting a seed for all of the results from using the morans_I() function because localmoran_perm() uses random permutations
 set.seed(25)
 
-#using the weighted neighbors to simulate size values at random
+#using the weighted neighbors to simulate health metric values at random
 MC_local <- localmoran_perm(dataframe$adult_percent_live_canopy, lw.dist, nsim = 9999, alternative = "greater")
 MC_local.df <- as.data.frame(MC_local)
 
@@ -178,7 +178,7 @@ ggplot() +
   coord_sf(xlim = c(ILM_box[1], ILM_box[3]), ylim = c(ILM_box[2], ILM_box[4]))+
   labs(color = "Adjusted P Value for PLC")
 
-#attempting to zoom on the sizes of the significant point
+#attempting to zoom on the health metrics of the significant points
 ggplot() +
   geom_sf(data =trails_ILM_trans) +
   geom_sf(data =ILM_results_dataframe, aes(size = adult_percent_live_canopy)) +

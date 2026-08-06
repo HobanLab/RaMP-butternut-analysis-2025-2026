@@ -14,10 +14,15 @@ library(spatstat) # to run the nndist function
 library(raster) #to plot rasters
 library(rstatix) #to run the Games-Howell Test
 library(ggnewscale) #to be able to assign different colors to different layered rasters
+library(ggplot2) #to be able to make plots and save them
 library(EnvStats) #to show sample size for boxplots and such!
+library(tmap) #to make maps
+
+working_directory <- "~/GitHub/butternut-health-assessment-2025/land_management_analysis"
+setwd(working_directory)
 
 #soil data brought to you by https://websoilsurvey.nrcs.usda.gov/app/WebSoilSurvey.aspx
-setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data/wss_aoi_2026_ILM/spatial")
+setwd("data/wss_aoi_2026_ILM/spatial")
 soil_map_ILM <- st_read("soilmu_a_aoi.shp", crs = 4326)
 soil_map_ILM_transformed <- st_crop(st_transform(soil_map_ILM, crs = 26918), ILM_fixed_field_data_processed_box)
 plot(soil_map_ILM_transformed)
@@ -30,8 +35,9 @@ ILM_data_w_soils <- st_join(ILM_fixed_field_data_processed_sf_transformed, soil_
 set.seed(25)
 
 #if you want to save time, you can upload the stored random distribution from here, because it takes a while to run
-setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data")
-save(ILM_stored_random_distributions_cleaned, file = "ILM_stored_random_distributions_cleaned.Rda")
+setwd(working_directory)
+setwd("data")
+load("ILM_stored_random_distributions_cleaned.Rda")
 #if you want to run this by yourself:
 # #creating the dataframe that stores how many points are in each soil type for each random distribution
 # ILM_stored_random_distributions <- data.frame(MUSYM = unique(soil_map_ILM$MUSYM))
@@ -103,35 +109,39 @@ plot_out_histogram <- function(cat){
     theme_classic()
 }
 
-plot_out_histogram(BcB)
-plot_out_histogram(AaC)
-plot_out_histogram(BdC)
-plot_out_histogram(EaA)
-plot_out_histogram(AaA)
-plot_out_histogram(AbA)
-plot_out_histogram(CbA)
-plot_out_histogram(KbA)
-plot_out_histogram(AaB)
-plot_out_histogram(BdB)
-plot_out_histogram(CbB)
-plot_out_histogram(BdD)
-plot_out_histogram(KaC)
-plot_out_histogram(BcC)
-plot_out_histogram(SdA)
-plot_out_histogram(KaB)
-plot_out_histogram(MaB)
-plot_out_histogram(BdE)
-plot_out_histogram(KbB)
-plot_out_histogram(KcA)
-plot_out_histogram(AbC)
+setwd(working_directory)
+setwd("saved plots/soil_distribution_plots")
+#credit to https://www.geeksforgeeks.org/r-language/save-plot-in-data-object-in-base-r/
+ggsave("BcB_ILM.png", plot = plot_out_histogram(BcB), width = 6, height = 4, units = "in")
+ggsave("AaC_ILM.png", plot = plot_out_histogram(AaC), width = 6, height = 4, units = "in")
+ggsave("BdC_ILM.png", plot = plot_out_histogram(BdC), width = 6, height = 4, units = "in")
+ggsave("EaA_ILM.png", plot = plot_out_histogram(EaA), width = 6, height = 4, units = "in")
+ggsave("AaA_ILM.png", plot = plot_out_histogram(AaA), width = 6, height = 4, units = "in")
+ggsave("AbA_ILM.png", plot = plot_out_histogram(AbA), width = 6, height = 4, units = "in")
+ggsave("CbA_ILM.png", plot = plot_out_histogram(CbA), width = 6, height = 4, units = "in")
+ggsave("KbA_ILM.png", plot = plot_out_histogram(KbA), width = 6, height = 4, units = "in")
+ggsave("AaB_ILM.png", plot = plot_out_histogram(AaB), width = 6, height = 4, units = "in")
+ggsave("BdB_ILM.png", plot = plot_out_histogram(BdB), width = 6, height = 4, units = "in")
+ggsave("CdB_ILM.png", plot = plot_out_histogram(CbB), width = 6, height = 4, units = "in")
+ggsave("BdD_ILM.png", plot = plot_out_histogram(BdD), width = 6, height = 4, units = "in")
+ggsave("KaC_ILM.png", plot = plot_out_histogram(KaC), width = 6, height = 4, units = "in")
+ggsave("BcC_ILM.png", plot = plot_out_histogram(BcC), width = 6, height = 4, units = "in")
+ggsave("SdA_ILM.png", plot = plot_out_histogram(SdA), width = 6, height = 4, units = "in")
+ggsave("KaB_ILM.png", plot = plot_out_histogram(KaB), width = 6, height = 4, units = "in")
+ggsave("MaB_ILM.png", plot = plot_out_histogram(MaB), width = 6, height = 4, units = "in")
+ggsave("BdE_ILM.png", plot = plot_out_histogram(BdE), width = 6, height = 4, units = "in")
+ggsave("KbB_ILM.png", plot = plot_out_histogram(KbB), width = 6, height = 4, units = "in")
+ggsave("KcA_ILM.png", plot = plot_out_histogram(KcA), width = 6, height = 4, units = "in")
+ggsave("AbC_ILM.png", plot = plot_out_histogram(AbC), width = 6, height = 4, units = "in")
 #W is water; no butternuts
-plot_out_histogram(AbB)
+ggsave("AbB_ILM.png", plot = plot_out_histogram(AbB), width = 6, height = 4, units = "in")
 
 
 #----
 #CPVT
 #soil data brought to you by https://websoilsurvey.nrcs.usda.gov/app/WebSoilSurvey.aspx
-setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data/wss_aoi_2026_CPVT/spatial")
+setwd(working_directory)
+setwd("data/wss_aoi_2026_CPVT/spatial")
 soil_map_CPVT <- st_read("soilmu_a_aoi.shp", crs = 4326)
 soil_map_CPVT_transformed <- st_crop(st_transform(soil_map_CPVT, crs = 26918), CPVT_fixed_field_data_processed_box)
 plot(soil_map_CPVT_transformed)
@@ -142,7 +152,8 @@ CPVT_data_w_soils <- st_join(CPVT_fixed_field_data_processed_sf_transformed, soi
 #RANDOM POINT ANALYSIS
 
 #I recommend just loading in this data as it takes a while to load
-setwd("~/GitHub/butternut-health-assessment-2025/land_management_analysis/data")
+setwd(working_directory)
+setwd("data")
 load("CPVT_stored_random_distributions_cleaned.Rda")
 
 # #If you want to rerun the dataset
@@ -220,35 +231,39 @@ plot_out_histogram <- function(cat){
     theme_classic()
 }
 
-plot_out_histogram(SuD)
-plot_out_histogram(VeC)
-plot_out_histogram(AdD)
-plot_out_histogram(PaB)
-plot_out_histogram(VeB)
-plot_out_histogram(SuB)
-plot_out_histogram(SxE)
-plot_out_histogram(BlA)
-plot_out_histogram(EwA)
-plot_out_histogram(GeB)
-plot_out_histogram(HnC)
-plot_out_histogram(Cv)
-plot_out_histogram(FaC)
-plot_out_histogram(PaD)
-plot_out_histogram(PaC)
-plot_out_histogram(SxC)
-plot_out_histogram(Lh)
-plot_out_histogram(GgC)
-plot_out_histogram(SuC)
-plot_out_histogram(BlB)
-plot_out_histogram(VeD)
+setwd(working_directory)
+setwd("saved plots/soil_distribution_plots")
+#credit to https://www.geeksforgeeks.org/r-language/save-plot-in-data-object-in-base-r/
+ggsave("SuD_CPVT.png", plot = plot_out_histogram(SuD), width = 6, height = 4, units = "in")
+ggsave("VeC_CPVT.png", plot = plot_out_histogram(VeC), width = 6, height = 4, units = "in")
+ggsave("AdD_CPVT.png", plot = plot_out_histogram(AdD), width = 6, height = 4, units = "in")
+ggsave("PaB_CPVT.png", plot = plot_out_histogram(PaB), width = 6, height = 4, units = "in")
+ggsave("VeB_CPVT.png", plot = plot_out_histogram(VeB), width = 6, height = 4, units = "in")
+ggsave("SuB_CPVT.png", plot = plot_out_histogram(SuB), width = 6, height = 4, units = "in")
+ggsave("SxE_CPVT.png", plot = plot_out_histogram(SxE), width = 6, height = 4, units = "in")
+ggsave("BlA_CPVT.png", plot = plot_out_histogram(BlA), width = 6, height = 4, units = "in")
+ggsave("EwA_CPVT.png", plot = plot_out_histogram(EwA), width = 6, height = 4, units = "in")
+ggsave("GeB_CPVT.png", plot = plot_out_histogram(GeB), width = 6, height = 4, units = "in")
+ggsave("HnC_CPVT.png", plot = plot_out_histogram(HnC), width = 6, height = 4, units = "in")
+ggsave("Cv_CPVT.png", plot = plot_out_histogram(Cv), width = 6, height = 4, units = "in")
+ggsave("FaC_CPVT.png", plot = plot_out_histogram(FaC), width = 6, height = 4, units = "in")
+ggsave("PaD_CPVT.png", plot = plot_out_histogram(PaD), width = 6, height = 4, units = "in")
+ggsave("PaC_CPVT.png", plot = plot_out_histogram(PaC), width = 6, height = 4, units = "in")
+ggsave("SxC_CPVT.png", plot = plot_out_histogram(SxC), width = 6, height = 4, units = "in")
+ggsave("Lh_CPVT.png", plot = plot_out_histogram(Lh), width = 6, height = 4, units = "in")
+ggsave("GgC_CPVT.png", plot = plot_out_histogram(GgC), width = 6, height = 4, units = "in")
+ggsave("SuC_CPVT.png", plot = plot_out_histogram(SuC), width = 6, height = 4, units = "in")
+ggsave("BlB_CPVT.png", plot = plot_out_histogram(BlB), width = 6, height = 4, units = "in")
+ggsave("VeD_CPVT.png", plot = plot_out_histogram(VeD), width = 6, height = 4, units = "in")
 #W is water; no butternuts
-plot_out_histogram(HnA)
-plot_out_histogram(HnB)
-plot_out_histogram(FsB)
-plot_out_histogram(Le)
-plot_out_histogram(MnC)
-plot_out_histogram(FaE)
-plot_out_histogram(FsE)
+ggsave("HnA_CPVT.png", plot = plot_out_histogram(HnA), width = 6, height = 4, units = "in")
+ggsave("HnB_CPVT.png", plot = plot_out_histogram(HnB), width = 6, height = 4, units = "in")
+ggsave("FsB_CPVT.png", plot = plot_out_histogram(FsB), width = 6, height = 4, units = "in")
+ggsave("Le_CPVT.png", plot = plot_out_histogram(Le), width = 6, height = 4, units = "in")
+ggsave("MnC_CPVT.png", plot = plot_out_histogram(MnC), width = 6, height = 4, units = "in")
+ggsave("FaE_CPVT.png", plot = plot_out_histogram(FaE), width = 6, height = 4, units = "in")
+ggsave("FsE_CPVT.png", plot = plot_out_histogram(FsE), width = 6, height = 4, units = "in")
+write.csv(CPVT_real_vs_random_quantiles, "CPVT_butternut_proportion_quantiles_by_soil_type.csv")
 
 #------------
 #Plots
@@ -265,13 +280,13 @@ tm_shape(CPVT_polygon) +
 
 #HEALTH PLOTS
 #these next few split up our data by age, and also select all of the living trees (which have more data to their name)
-data_ILMadults_w_soil <- CPVT_data_w_soils %>% filter(seedling_or_adult == "Adult")
+data_ILMadults_w_soil <- ILM_data_w_soils %>% filter(seedling_or_adult == "Adult")
 data_ILMliveadults_w_soil <- data_ILMadults_w_soil %>% filter(adult_dead_or_alive == "Alive")
 
 data_ILMseedlings_w_soil <- ILM_data_w_soils %>% filter(seedling_or_adult == "Seedling")
 data_ILMliveseedlings_w_soil <- data_ILMseedlings_w_soil %>% filter(seedling_dead_or_alive == "Alive")
 
-data_CPVTadults_w_soil <- ILM_data_w_soils %>% filter(seedling_or_adult == "Adult")
+data_CPVTadults_w_soil <- CPVT_data_w_soils %>% filter(seedling_or_adult == "Adult")
 data_CPVTliveadults_w_soil <- data_CPVTadults_w_soil %>% filter(adult_dead_or_alive == "Alive")
 
 data_CPVTseedlings_w_soil <- CPVT_data_w_soils %>% filter(seedling_or_adult == "Seedling")
