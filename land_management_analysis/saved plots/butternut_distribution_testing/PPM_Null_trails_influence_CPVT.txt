@@ -1,0 +1,65 @@
+Point process model
+Fitted to data: CPVT_ppp
+Fitting method: maximum likelihood
+Model was fitted analytically
+Call:
+ppm.formula(Q = CPVT_ppp ~ 1)
+Edge correction: “border”
+	[border correction distance r = 0 ]
+---------------------------------------------------------------------------------------------
+Quadrature scheme (Berman-Turner) = data + dummy + weights
+
+Data pattern:
+Planar point pattern:  163 points
+Average intensity 0.000272 points per square unit
+Window: polygonal boundary
+single connected closed polygon with 4 vertices
+enclosing rectangle: [639586.1, 640322.5] x [4910027, 4910841] units
+                     (736.4 x 813.8 units)
+Window area = 599283 square units
+Fraction of frame area: 1
+
+Dummy quadrature points:
+     32 x 32 grid of dummy points, plus 4 corner points
+     dummy spacing: 23.01278 x 25.43097 units
+
+Original dummy parameters: =
+Planar point pattern:  1028 points
+Average intensity 0.00172 points per square unit
+Window: polygonal boundary
+single connected closed polygon with 4 vertices
+enclosing rectangle: [639586.1, 640322.5] x [4910027, 4910841] units
+                     (736.4 x 813.8 units)
+Window area = 599283 square units
+Fraction of frame area: 1
+Quadrature weights:
+     (counting weights based on 32 x 32 array of rectangular tiles)
+All weights:
+	range: [45, 585]	total: 599000
+Weights on data points:
+	range: [45, 293]	total: 28900
+Weights on dummy points:
+	range: [45, 585]	total: 570000
+---------------------------------------------------------------------------------------------
+FITTED :
+
+Stationary Poisson process
+
+---- Intensity: ----
+
+
+Uniform intensity:
+[1] 0.0002719917
+
+             Estimate       S.E.   CI95.lo   CI95.hi Ztest      Zval
+log(lambda) -8.209739 0.07832604 -8.363255 -8.056223   *** -104.8149
+
+----------- gory details -----
+
+Fitted regular parameters (theta):
+log(lambda) 
+  -8.209739 
+
+Fitted exp(theta):
+ log(lambda) 
+0.0002719917 

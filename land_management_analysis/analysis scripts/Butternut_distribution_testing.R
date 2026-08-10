@@ -36,10 +36,14 @@ library(raster) #to use crop
 library(starsExtra) #to use dist_to_nearest
 library(geostatsp) # To successfully use as.im
 library(tmaptools)
+library(tmap)
+
+#change this to your own working directory before starting!
+working_directory <- "~/GitHub/butternut-health-assessment-2025/land_management_analysis"
 
 # loading in the processed tree data 
 # NOTE: uncomment and run line 42, sourcing Data_Processing_Script.R, if the line has not yet to be run across any of the scripts/the environment has been cleared 
-# source("./analyses/Data_Processing_Script.R")
+# source("DataProcessing.R")
 
 #ensuring there is a column from latitude and longitude in the populations transformed dataframe because those columns are needed in "hypothesis_1_clumping_CLEANED.R" 
 
@@ -80,6 +84,7 @@ ILM_ppp <- as.ppp(st_coordinates(ILM_fixed_field_data_processed_sf), W = win) #c
 plot(ILM_ppp, pch = 16, cex = 0.5) # plotting the randomized point pattern
 K <- Kest(ILM_ppp, correction = "Ripley") # Ripley's K function, using the isotropic/Ripley correction
 plot(K, main=NULL, las=1, legendargs=list(cex=0.8, xpd=TRUE)) # plotting Ripley's output
+ggsave("Ripleys K for Bounding Box ILM.png", plot = plot(K, main=NULL, las=1, legendargs=list(cex=0.8, xpd=TRUE)), width = 6, height = 4, units = "in")
 
 # Convex Hull
 ILM_win_convex <- as.owin(trails_ILM_convex_hull)  #turning the convex hull into a window
@@ -87,6 +92,7 @@ ILM_ppp_convex <- as.ppp(st_coordinates(ILM_fixed_field_data_processed_sf), W = 
 plot(ILM_ppp_convex, pch = 16, cex = 0.5) # plotting the randomized point pattern
 ILM_k_convex <- Kest(ILM_ppp_convex, correction = "Ripley") # Ripley's K function, using the isotropic/Ripley correction
 plot(ILM_k_convex, main=NULL, las=1, legendargs=list(cex=0.8, xpd=TRUE))  # plotting Ripley's output
+ggsave("Ripleys K for Convex Hull ILM.png", plot(ILM_k_convex, main=NULL, las=1, legendargs=list(cex=0.8, xpd=TRUE)), width = 6, height = 4, units = "in")
 
 #unlike Rebecca, I can't have the window set as a buffer around the trail network because those buffers overlap weirdly, so I skip that section
 
@@ -196,25 +202,33 @@ ANN_analysis <- function(population, window) {
 
 ## Convex Hull
 
-# LM
-
 ILM_ANN_Anlysis <- ANN_analysis("ILM", "Convex Hull")
 ILM_ANN_Anlysis #first index is the ANN value, the second is the left-tailed p-value
+#save these results to your working directory
+setwd(working_directory)
+setwd("saved plots/butternut_distribution_testing")
+write.csv(ILM_ANN_Anlysis$ann.r, "ILM_ANN_Analysis_Simulated_values_Convex_Hull.csv")
+write.csv(ILM_ANN_Anlysis$p.value, "ILM_ANN_Convex_Hull_P_values.csv")
 
 #plotting the randomly generated points, tree points, and the trails
-ggplot()+ 
+P <- ggplot()+ 
   geom_sf(data=trails_ILM_trans)+ #plotting the trails
   geom_sf(data=ILM_fixed_field_data_processed_sf, aes(col = "red")) + #plotting the tree points
-  geom_sf(data=ILM_ANN_Anlysis$random_points, fill = NA) #plotting the random points
+  geom_sf(data=ILM_ANN_Anlysis$random_points, fill = NA)+ #plotting the random points
+  labs(title = "ILM ANN Random (Convex Hull) vs Real")
+P
+ggsave("ILM ANN Random (Convex Hull) vs Real.png", plot = P, width = 6, height = 4, units = "in")
 
 #creating a histogram of the ANN Simulation Results
-as_tibble(ILM_ANN_Anlysis$ann.r) %>%  #turns the list of ann values from the simulations of random points and turns it into a tibble/dataframe
+P <- as_tibble(ILM_ANN_Anlysis$ann.r) %>%  #turns the list of ann values from the simulations of random points and turns it into a tibble/dataframe
   ggplot()+
   geom_histogram(aes(x = value), fill = "dodgerblue1", color = "black", bins = 50) +
   xlim(range(ILM_ANN_Anlysis$observed_ANN, ILM_ANN_Anlysis$ann.r)) + #sets the limit of the xaxis to encompass the ANN for our trees and histogram of ANNs from the simulation
   geom_vline(xintercept=ILM_ANN_Anlysis$observed_ANN, col = "red") + #adds a verticle line of our tree'\s' ANN
-  xlab("ANN")+
+  labs(x = "ANN", title = "ILM ANN Simulated (Convex Hull) vs Real Value")+
   theme_classic()
+P
+ggsave("ILM ANN Simulated (Convex Hull) vs Real Value.png", plot = P, width = 6, height = 4, units = "in")
 
 #### ANN Analysis (test for clustering/dispersion) while controlling for the trails ####
 
@@ -238,80 +252,98 @@ as_tibble(ILM_ANN_Anlysis$ann.r) %>%  #turns the list of ann values from the sim
 ## Version of ANN analysis controlling for the trails with just the trails multipoint 
 ILM_ANN_Anlysis_trails <- ANN_analysis("ILM", "Just trails")
 ILM_ANN_Anlysis_trails #first index is the ANN value, the second is the left-tailed p-value
+write.csv(ILM_ANN_Anlysis_trails$ann.R, "ILM_ANN_values_just_on_trails_ Simulated.csv")
+write.csv(ILM_ANN_Anlysis_trails$p.value, "ILM_ANN_on_trails_P_values.csv")
 
 #plotting the randomly generated points, tree points, and probability/distance raster
-ggplot()+ 
+P <- ggplot()+ 
   geom_stars(data=trails_ILM_trans_point_raster)+ #plotting the trails edge raster
   geom_sf(data=ILM_fixed_field_data_processed_sf, aes(col = "red"))+ #plotting the tree points
-  geom_sf(data=ILM_ANN_Anlysis_trails$random_points$geom, fill = NA) #plotting the random points
+  geom_sf(data=ILM_ANN_Anlysis_trails$random_points$geom, fill = NA)+ #plotting the random points
+  labs(title = "ILM ANN Random (just on trails) vs Real")
+P
+ggsave("ILM ANN Random (just on trails) vs Real.png", plot = P, width = 6, height = 4, units = "in")
 
 #graphing the histogram of simulated ANN values and the mean ANN from our trees
-as_tibble(ILM_ANN_Anlysis_trails$ann.r) %>% #turning the ann.r vector as a tibble
+P <- as_tibble(ILM_ANN_Anlysis_trails$ann.r) %>% #turning the ann.r vector as a tibble
   ggplot()+
   geom_histogram(aes(x = value), fill = "dodgerblue1", color = "black", bins = 50) + 
   xlim(range(ILM_ANN_Anlysis_trails$observed_ANN, ILM_ANN_Anlysis_trails$ann.r)) + #setting the range of the graph to include both the simulated ANN and our tree's mean ANN
   geom_vline(xintercept=ILM_ANN_Anlysis_trails$observed_ANN, col = "red") + #plotting our tree's mean ANN
-  xlab("ANN") +
+  labs(x = "ANN", title = "ILM ANN Simulated (just on trails) vs Real Value") +
   theme_classic()
+P
+ggsave("ILM ANN Simulated (just on trails) vs Real Value.png", plot = P, width = 6, height = 4, units = "in")
 
 #plotting the randomly generated points, tree points, and probability/distance raster
-ggplot()+ 
+P <- ggplot()+ 
   geom_stars(data=na.omit(st_as_stars(dist_near_trails_fixed_box_ILM_inverse), aes(fill = layer)))+ #plotting the distance inverse raster 
   scale_fill_distiller(palette = "Blues", na.value = "transparent", trans = "reverse")+
   geom_sf(data=st_cast(ILM_ANN_Anlysis_trails$random_points$geom, "POINT"), alpha = 0.5, aes(color = "Randomly Generated"), fill = NA, shape = 16) + #plotting the random points
   geom_sf(data=ILM_fixed_field_data_processed_sf, aes(color = "Actual Trees"), shape = 16, alpha = 0.5)+ #plotting the tree points
   labs(color = "Actual Trees", fill = "Inverse Distance (1/m)", 
        x = "Longitude", 
-       y = "Latitude")+
+       y = "Latitude",
+       title = "Inverse Distances ILM Real Distribution vs. Random (just on trails)")+
   scale_color_manual(
     name = "Trees",
     values = c("Actual Trees" = "red", 
                "Randomly Generated" = "black"))+
   theme_minimal()+
   # guides(color = guide_legend(override.aes = list(shape = c(16,16), linetype = 0)))+
-  labs(title = "Isle la Motte")+
   theme_classic() +
   theme(title=element_text(size=15), 
         axis.text=element_text(size=15),  axis.title.x =element_text(size= 15),
         axis.title.y =element_text(size= 15),
         text = element_text(family = "serif"))
+P
+ggsave("Inverse Distances ILM Real Distribution vs. Random (just on trails).png", plot = P, width = 6, height = 4, units = "in")
 
 #graphing the histogram of simulated ANN values and the mean ANN from our trees
-as_tibble(ILM_ANN_Anlysis_trails$ann.r) %>% #turning the ann.r vector as a tibble
+P <- as_tibble(ILM_ANN_Anlysis_trails$ann.r) %>% #turning the ann.r vector as a tibble
   ggplot()+
   geom_histogram(aes(x = value), fill = "skyblue", color = "black", bins = 50) + 
   xlim(range(ILM_ANN_Anlysis_trails$observed_ANN, ILM_ANN_Anlysis_trails$ann.r)) + #setting the range of the graph to include both the simulated ANN and our tree's mean ANN
-  geom_vline(xintercept=ILM_ANN_Anlysis$observed_ANN, col = "red") + #plotting our tree's mean ANN
+  geom_vline(xintercept=ILM_ANN_Anlysis_trails$observed_ANN, col = "red") + #plotting our tree's mean ANN
   xlab("Average Nearest Neighbor") +
   ylab("Frequency")+
-  labs(title = "Isle la Motte")+
+  labs(title = "ILM Real vs. Random (just on trails) ANN values Histogram")+
   geom_text(aes(label = round(ILM_ANN_Anlysis_trails$observed_ANN, 2)), x = 6.7, y = 40, color = "red") +
   theme_classic() +
   theme(title=element_text(size=15), 
         axis.text=element_text(size=15),  axis.title.x =element_text(size= 15),
         axis.title.y =element_text(size= 15),
         text = element_text(family = "serif"))
-
+P
+ggsave("ILM Real vs. Random ANN values Histogram.png", plot = P, width = 6, height = 4, units = "in")
 ## Version of ANN analysis controlling for the trails with on and inside the trails 
 
 ILM_ANN_Anlysis_on_inside_trails <- ANN_analysis("ILM", "On and Inside trails")
 ILM_ANN_Anlysis_on_inside_trails #first index is the ANN value, the second is the left-tailed p-value
+write.csv(ILM_ANN_Anlysis_on_inside_trails$ann.R, "ILM_ANN_values_on_inside_trails_Simulated.csv")
+write.csv(ILM_ANN_Anlysis_on_inside_trails$p.value, "ILM_ANN_on_inside_trails_P_values.csv")
 
 #plotting the randomly generated points, tree points, and trails raster
-ggplot()+ 
+P <- ggplot()+ 
   geom_stars(data=st_rasterize(trails_ILM_trans))+ #plotting the trails raster 
   geom_sf(data=ILM_fixed_field_data_processed_sf, aes(col = "red"))+ #plotting the tree points
-  geom_sf(data=ILM_ANN_Anlysis_on_inside_trails$random_points, fill = NA) #plotting the random points
+  geom_sf(data=ILM_ANN_Anlysis_on_inside_trails$random_points, fill = NA)+ #plotting the random points
+  labs(title = "ILM Distribution of Trees Real vs. Random (on and inside trails)")
+P
+ggsave("ILM Distribution of Trees Real vs. Random (on and inside trails).png", plot = P, width = 6, height = 4, units = "in")
 
 #graphing the histogram of simulated ANN values and the mean ANN from our trees
-as_tibble(ILM_ANN_Anlysis_on_inside_trails$ann.r) %>% #turning the ann.r vector as a tibble
+P <- as_tibble(ILM_ANN_Anlysis_on_inside_trails$ann.r) %>% #turning the ann.r vector as a tibble
   ggplot()+
   geom_histogram(aes(x = value), fill = "skyblue", color = "black", bins = 50) + 
   xlim(range(ILM_ANN_Anlysis_on_inside_trails$observed_ANN, ILM_ANN_Anlysis_on_inside_trails$ann.r)) + #setting the range of the graph to include both the simulated ANN and our tree's mean ANN
   geom_vline(xintercept=ILM_ANN_Anlysis_on_inside_trails$observed_ANN, col = "red") + #plotting our tree's mean ANN
   xlab("Average Nearest Neighbor") +
   ylab("Frequency")+
+  labs(title = "ILM Real vs. Random (on and inside trails) ANN values")
   theme_classic()
+P
+ggsave("ILM Real vs. Random (on and inside trails) ANN values.png", plot = P, width = 6, height = 4, units = "in")
 
 
 #### PPM analysis ####
@@ -334,20 +366,25 @@ ILM_ppp <- unmark(ILM_ppp)
 #Alternative hypothesis, seeing if the distance to the trails's edge influences the tree point placement
 PPM1 <- ppm(Q = ILM_ppp ~ dist_near_trails_fixed_box_ILM_inverse_im) 
 PPM1
+capture.output(summary(PPM1), file = "PPM_Alternative_trails_influence_ILM.txt")
 
 #null hypothesis, no change in the trend of the points
 PPM0 <- ppm(ILM_ppp ~ 1)
 PPM0
+capture.output(summary(PPM0), file = "PPM_Null_trails_influence_ILM.txt")
 
 #using a likelihood ratio test to compare the alternative and null models
-anova(PPM0, PPM1, test="LRT")
+results <- anova(PPM0, PPM1, test="LRT")
+tidy(results, conf.int = TRUE)
+write.csv(results, "ANOVA_PPM_ILM_trail_influence.csv")
 
 #plotting the alternative model
-plot(effectfun(PPM1, "dist_near_trails_fixed_box_ILM_inverse_im", se.fit = TRUE), main = "Distance to trails of ILM",
+P <- plot(effectfun(PPM1, "dist_near_trails_fixed_box_ILM_inverse_im", se.fit = TRUE), main = "Distance to trails of ILM",
      ylab = "Butternut Trees", xlab = "Inverse Distance to trails", legend = FALSE)
+P
+#I saved this manually (pressing save image)
 
 ## Using the non-inverse distance to trails raster ##
-
 
 #### Creating the distance to trails rasters where everything inside the trails equals 1 ####
 
@@ -364,11 +401,12 @@ dist_near_trails_fixed_box_ILM_corrected <- rasterize(trails_vect_ILM, rast(dist
 #trimming off the NAs
 dist_near_trails_fixed_box_ILM_corrected <- trim(dist_near_trails_fixed_box_ILM_corrected)
 
-ggplot()+
+P <- ggplot()+
   geom_raster(data = as.data.frame(dist_near_trails_fixed_box_ILM_corrected, xy=T), aes(x=x, y=y, fill = layer))+
   geom_sf(data = trails_ILM_trans)+
   geom_sf(data = ILM_fixed_field_data_processed_sf)
-
+P
+ggsave("Distance to trails raster ILM butternuts.png", plot = P, width = 6, height = 4, units = "in")
 #Test for ILM
 
 #creating the image of the distance to trails stars
@@ -392,22 +430,31 @@ anova(PPM0, PPM1, test="LRT")
 #plotting the alternative model
 plot(effectfun(PPM1, "dist_near_trails_fixed_box_ILM_corrected_im", se.fit = TRUE), main = "Distance to trails of Isle la Motte",
      ylab = "Butternut Trees", xlab = "Distance to trails", legend = FALSE)
+#I also saved this manually (PPM Alternative distance to trails ILM)
 
+############
 ### CPVT ###
+############
 
 # plotting the points, river, and bounding box (encompassing all of the outlying trees)
-ggplot(CPVT_fixed_field_data_processed_box)+
+P <- ggplot(CPVT_fixed_field_data_processed_box)+
   geom_sf() +
   geom_sf(data = trails_CPVT_trans) +
-  geom_sf(data = CPVT_fixed_field_data_processed_sf)
+  geom_sf(data = CPVT_fixed_field_data_processed_sf) +
+  labs(title = "CPVT butternuts, bounding box, and trail network")
+P
+ggsave("CPVT butternuts, bounding box, and trail network.png", plot = P, width = 6, height = 4, units = "in")
 
 # creating one geometry with the tree points using st_union and then creating a convex hull with st_convex_hull
 trails_CPVT_convex_hull <- st_convex_hull(st_union(CPVT_fixed_field_data_processed_sf))
 #let's check on that
-ggplot(trails_CPVT_convex_hull)+
+P <- ggplot(trails_CPVT_convex_hull)+
   geom_sf() +
   geom_sf(data = trails_CPVT_trans) +
-  geom_sf(data = CPVT_fixed_field_data_processed_sf)
+  geom_sf(data = CPVT_fixed_field_data_processed_sf) + 
+  labs(title = "CPVT butternuts, convex hull, and trail network")
+P
+ggsave("CPVT butternuts, convex hull, and trail network.png", plot = P, width = 6, height = 4, units = "in")
 
 ## Calculating the Ripley's K: ##
 # 1) Turn the bounding box into a window object
@@ -429,6 +476,7 @@ CPVT_ppp <- as.ppp(st_coordinates(CPVT_fixed_field_data_processed_sf), W = win) 
 plot(CPVT_ppp, pch = 16, cex = 0.5) # plotting the randomized point pattern
 K <- Kest(CPVT_ppp, correction = "Ripley") # Ripley's K function, using the isotropic/Ripley correction
 plot(K, main=NULL, las=1, legendargs=list(cex=0.8, xpd=TRUE)) # plotting Ripley's output
+ggsave("Ripleys K for Bounding Box CPVT.png", plot = plot(K, main=NULL, las=1, legendargs=list(cex=0.8, xpd=TRUE)), width = 6, height = 4, units = "in")
 
 # Convex Hull
 CPVT_win_convex <- as.owin(trails_CPVT_convex_hull)  #turning the convex hull into a window
@@ -436,6 +484,8 @@ CPVT_ppp_convex <- as.ppp(st_coordinates(CPVT_fixed_field_data_processed_sf), W 
 plot(CPVT_ppp_convex, pch = 16, cex = 0.5) # plotting the randomized point pattern
 CPVT_k_convex <- Kest(CPVT_ppp_convex, correction = "Ripley") # Ripley's K function, using the isotropic/Ripley correction
 plot(CPVT_k_convex, main=NULL, las=1, legendargs=list(cex=0.8, xpd=TRUE))  # plotting Ripley's output
+ggsave("Ripleys K for Convex Hull CPVT.png", plot = plot(CPVT_k_convex, main=NULL, las=1, legendargs=list(cex=0.8, xpd=TRUE)), width = 6, height = 4, units = "in")
+#manually saved---not sure why this is not working
 
 #unlike Rebecca, I can't have the window set as a buffer around the trail network because those buffers overlap weirdly, so I skip that section
 
@@ -547,21 +597,31 @@ ANN_analysis <- function(population, window) {
 
 CPVT_ANN_Anlysis <- ANN_analysis("CPVT", "Convex Hull")
 CPVT_ANN_Anlysis #first index is the ANN value, the second is the left-tailed p-value
+#save these results to your working directory
+setwd(working_directory)
+setwd("saved plots/butternut_distribution_testing")
+write.csv(CPVT_ANN_Anlysis$ann.r, "CPVT_ANN_Analysis_Simulated_values_Convex_Hull.csv")
+write.csv(CPVT_ANN_Anlysis$p.value, "CPVT_ANN_Convex_Hull_P_values.csv")
 
 #plotting the randomly generated points, tree points, and the trails
-ggplot()+ 
+P <- ggplot()+ 
   geom_sf(data=trails_CPVT_trans)+ #plotting the trails
   geom_sf(data=CPVT_fixed_field_data_processed_sf, aes(col = "red")) + #plotting the tree points
-  geom_sf(data=CPVT_ANN_Anlysis$random_points, fill = NA) #plotting the random points
+  geom_sf(data=CPVT_ANN_Anlysis$random_points, fill = NA)+ #plotting the random points
+  labs(title = "CPVT ANN Random (Convex Hull) vs Real")
+P
+ggsave("CPVT ANN Random (Convex Hull) vs Real.png", plot = P, width = 6, height = 4, units = "in")
 
 #creating a histogram of the ANN Simulation Results
-as_tibble(CPVT_ANN_Anlysis$ann.r) %>%  #turns the list of ann values from the simulations of random points and turns it into a tibble/dataframe
+P <- as_tibble(CPVT_ANN_Anlysis$ann.r) %>%  #turns the list of ann values from the simulations of random points and turns it into a tibble/dataframe
   ggplot()+
   geom_histogram(aes(x = value), fill = "dodgerblue1", color = "black", bins = 50) +
   xlim(range(CPVT_ANN_Anlysis$observed_ANN, CPVT_ANN_Anlysis$ann.r)) + #sets the limit of the xaxis to encompass the ANN for our trees and histogram of ANNs from the simulation
   geom_vline(xintercept=CPVT_ANN_Anlysis$observed_ANN, col = "red") + #adds a verticle line of our tree'\s' ANN
-  xlab("ANN")+
+  labs(x = "ANN", title = "CPVT ANN Simulated (Convex Hull) vs Real Value")+
   theme_classic()
+P
+ggsave("CPVT ANN Simulated (Convex Hull) vs Real Value.png", plot = P, width = 6, height = 4, units = "in")
 
 #### ANN Analysis (test for clustering/dispersion) while controlling for the trails ####
 
@@ -585,80 +645,98 @@ as_tibble(CPVT_ANN_Anlysis$ann.r) %>%  #turns the list of ann values from the si
 ## Version of ANN analysis controlling for the trails with just the trails multipoint 
 CPVT_ANN_Anlysis_trails <- ANN_analysis("CPVT", "Just trails")
 CPVT_ANN_Anlysis_trails #first index is the ANN value, the second is the left-tailed p-value
+write.csv(CPVT_ANN_Anlysis_trails$ann.R, "CPVT_ANN_values_just_on_trails_ Simulated.csv")
+write.csv(CPVT_ANN_Anlysis_trails$p.value, "CPVT_ANN_on_trails_P_values.csv")
 
 #plotting the randomly generated points, tree points, and probability/distance raster
-ggplot()+ 
+P <- ggplot()+ 
   geom_stars(data=trails_CPVT_trans_point_raster)+ #plotting the trails edge raster
   geom_sf(data=CPVT_fixed_field_data_processed_sf, aes(col = "red"))+ #plotting the tree points
-  geom_sf(data=CPVT_ANN_Anlysis_trails$random_points$geom, fill = NA) #plotting the random points
+  geom_sf(data=CPVT_ANN_Anlysis_trails$random_points$geom, fill = NA)+ #plotting the random points
+  labs(title = "CPVT ANN Random (just on trails) vs Real")
+P
+ggsave("CPVT ANN Random (just on trails) vs Real.png", plot = P, width = 6, height = 4, units = "in")
 
 #graphing the histogram of simulated ANN values and the mean ANN from our trees
-as_tibble(CPVT_ANN_Anlysis_trails$ann.r) %>% #turning the ann.r vector as a tibble
+P <- as_tibble(CPVT_ANN_Anlysis_trails$ann.r) %>% #turning the ann.r vector as a tibble
   ggplot()+
   geom_histogram(aes(x = value), fill = "dodgerblue1", color = "black", bins = 50) + 
   xlim(range(CPVT_ANN_Anlysis_trails$observed_ANN, CPVT_ANN_Anlysis_trails$ann.r)) + #setting the range of the graph to include both the simulated ANN and our tree's mean ANN
   geom_vline(xintercept=CPVT_ANN_Anlysis_trails$observed_ANN, col = "red") + #plotting our tree's mean ANN
-  xlab("ANN") +
+  labs(x = "ANN", title = "CPVT ANN Simulated (just on trails) vs Real Value") +
   theme_classic()
+P
+ggsave("CPVT ANN Simulated (just on trails) vs Real Value.png", plot = P, width = 6, height = 4, units = "in")
 
 #plotting the randomly generated points, tree points, and probability/distance raster
-ggplot()+ 
+P <- ggplot()+ 
   geom_stars(data=na.omit(st_as_stars(dist_near_trails_fixed_box_CPVT_inverse), aes(fill = layer)))+ #plotting the distance inverse raster 
   scale_fill_distiller(palette = "Blues", na.value = "transparent", trans = "reverse")+
   geom_sf(data=st_cast(CPVT_ANN_Anlysis_trails$random_points$geom, "POINT"), alpha = 0.5, aes(color = "Randomly Generated"), fill = NA, shape = 16) + #plotting the random points
   geom_sf(data=CPVT_fixed_field_data_processed_sf, aes(color = "Actual Trees"), shape = 16, alpha = 0.5)+ #plotting the tree points
   labs(color = "Actual Trees", fill = "Inverse Distance (1/m)", 
        x = "Longitude", 
-       y = "Latitude")+
+       y = "Latitude",
+       title = "Inverse Distances CPVT Real Distribution vs. Random (just on trails)")+
   scale_color_manual(
     name = "Trees",
     values = c("Actual Trees" = "red", 
                "Randomly Generated" = "black"))+
   theme_minimal()+
   # guides(color = guide_legend(override.aes = list(shape = c(16,16), linetype = 0)))+
-  labs(title = "Charlotte Park")+
   theme_classic() +
   theme(title=element_text(size=15), 
         axis.text=element_text(size=15),  axis.title.x =element_text(size= 15),
         axis.title.y =element_text(size= 15),
         text = element_text(family = "serif"))
+P
+ggsave("Inverse Distances CPVT Real Distribution vs. Random (just on trails).png", plot = P, width = 6, height = 4, units = "in")
 
 #graphing the histogram of simulated ANN values and the mean ANN from our trees
-as_tibble(CPVT_ANN_Anlysis_trails$ann.r) %>% #turning the ann.r vector as a tibble
+P <- as_tibble(CPVT_ANN_Anlysis_trails$ann.r) %>% #turning the ann.r vector as a tibble
   ggplot()+
   geom_histogram(aes(x = value), fill = "skyblue", color = "black", bins = 50) + 
   xlim(range(CPVT_ANN_Anlysis_trails$observed_ANN, CPVT_ANN_Anlysis_trails$ann.r)) + #setting the range of the graph to include both the simulated ANN and our tree's mean ANN
-  geom_vline(xintercept=CPVT_ANN_Anlysis$observed_ANN, col = "red") + #plotting our tree's mean ANN
+  geom_vline(xintercept=CPVT_ANN_Anlysis_trails$observed_ANN, col = "red") + #plotting our tree's mean ANN
   xlab("Average Nearest Neighbor") +
   ylab("Frequency")+
-  labs(title = "Charlotte Park")+
+  labs(title = "CPVT Real vs. Random (just on trails) ANN values Histogram")+
   geom_text(aes(label = round(CPVT_ANN_Anlysis_trails$observed_ANN, 2)), x = 6.7, y = 40, color = "red") +
   theme_classic() +
   theme(title=element_text(size=15), 
         axis.text=element_text(size=15),  axis.title.x =element_text(size= 15),
         axis.title.y =element_text(size= 15),
         text = element_text(family = "serif"))
-
+P
+ggsave("CPVT Real vs. Random ANN values Histogram.png", plot = P, width = 6, height = 4, units = "in")
 ## Version of ANN analysis controlling for the trails with on and inside the trails 
 
 CPVT_ANN_Anlysis_on_inside_trails <- ANN_analysis("CPVT", "On and Inside trails")
 CPVT_ANN_Anlysis_on_inside_trails #first index is the ANN value, the second is the left-tailed p-value
+write.csv(CPVT_ANN_Anlysis_on_inside_trails$ann.R, "CPVT_ANN_values_on_inside_trails_Simulated.csv")
+write.csv(CPVT_ANN_Anlysis_on_inside_trails$p.value, "CPVT_ANN_on_inside_trails_P_values.csv")
 
 #plotting the randomly generated points, tree points, and trails raster
-ggplot()+ 
+P <- ggplot()+ 
   geom_stars(data=st_rasterize(trails_CPVT_trans))+ #plotting the trails raster 
   geom_sf(data=CPVT_fixed_field_data_processed_sf, aes(col = "red"))+ #plotting the tree points
-  geom_sf(data=CPVT_ANN_Anlysis_on_inside_trails$random_points, fill = NA) #plotting the random points
+  geom_sf(data=CPVT_ANN_Anlysis_on_inside_trails$random_points, fill = NA)+ #plotting the random points
+  labs(title = "CPVT Distribution of Trees Real vs. Random (on and inside trails)")
+P
+ggsave("CPVT Distribution of Trees Real vs. Random (on and inside trails).png", plot = P, width = 6, height = 4, units = "in")
 
 #graphing the histogram of simulated ANN values and the mean ANN from our trees
-as_tibble(CPVT_ANN_Anlysis_on_inside_trails$ann.r) %>% #turning the ann.r vector as a tibble
+P <- as_tibble(CPVT_ANN_Anlysis_on_inside_trails$ann.r) %>% #turning the ann.r vector as a tibble
   ggplot()+
   geom_histogram(aes(x = value), fill = "skyblue", color = "black", bins = 50) + 
   xlim(range(CPVT_ANN_Anlysis_on_inside_trails$observed_ANN, CPVT_ANN_Anlysis_on_inside_trails$ann.r)) + #setting the range of the graph to include both the simulated ANN and our tree's mean ANN
   geom_vline(xintercept=CPVT_ANN_Anlysis_on_inside_trails$observed_ANN, col = "red") + #plotting our tree's mean ANN
   xlab("Average Nearest Neighbor") +
   ylab("Frequency")+
+  labs(title = "CPVT Real vs. Random (on and inside trails) ANN values")
   theme_classic()
+P
+ggsave("CPVT Real vs. Random (on and inside trails) ANN values.png", plot = P, width = 6, height = 4, units = "in")
 
 
 #### PPM analysis ####
@@ -681,20 +759,26 @@ CPVT_ppp <- unmark(CPVT_ppp)
 #Alternative hypothesis, seeing if the distance to the trails's edge influences the tree point placement
 PPM1 <- ppm(Q = CPVT_ppp ~ dist_near_trails_fixed_box_CPVT_inverse_im) 
 PPM1
+capture.output(summary(PPM1), file = "PPM_Alternative_trails_influence_CPVT.txt")
 
 #null hypothesis, no change in the trend of the points
 PPM0 <- ppm(CPVT_ppp ~ 1)
 PPM0
+capture.output(summary(PPM0), file = "PPM_Null_trails_influence_CPVT.txt")
 
 #using a likelihood ratio test to compare the alternative and null models
-anova(PPM0, PPM1, test="LRT")
+results <- anova(PPM0, PPM1, test="LRT")
+results
+tidy(results, conf.int = TRUE)
+write.csv(results, "ANOVA_PPM_CPVT_trail_influence.csv")
 
 #plotting the alternative model
-plot(effectfun(PPM1, "dist_near_trails_fixed_box_CPVT_inverse_im", se.fit = TRUE), main = "Distance to trails of CPVT",
+P <- plot(effectfun(PPM1, "dist_near_trails_fixed_box_CPVT_inverse_im", se.fit = TRUE), main = "Distance to trails of CPVT",
      ylab = "Butternut Trees", xlab = "Inverse Distance to trails", legend = FALSE)
+P
+#I saved this manually (pressing save image)
 
 ## Using the non-inverse distance to trails raster ##
-
 
 #### Creating the distance to trails rasters where everything inside the trails equals 1 ####
 
@@ -711,11 +795,12 @@ dist_near_trails_fixed_box_CPVT_corrected <- rasterize(trails_vect_CPVT, rast(di
 #trimming off the NAs
 dist_near_trails_fixed_box_CPVT_corrected <- trim(dist_near_trails_fixed_box_CPVT_corrected)
 
-ggplot()+
+P <- ggplot()+
   geom_raster(data = as.data.frame(dist_near_trails_fixed_box_CPVT_corrected, xy=T), aes(x=x, y=y, fill = layer))+
   geom_sf(data = trails_CPVT_trans)+
   geom_sf(data = CPVT_fixed_field_data_processed_sf)
-
+P
+ggsave("Distance to trails raster CPVT butternuts.png", plot = P, width = 6, height = 4, units = "in")
 #Test for CPVT
 
 #creating the image of the distance to trails stars
@@ -734,11 +819,15 @@ PPM0 <- ppm(CPVT_fixed_field_data_processed_ppp ~ 1)
 PPM0
 
 #using a likelihood ratio test to compare the alternative and null models
-anova(PPM0, PPM1, test="LRT")
+results <- anova(PPM0, PPM1, test="LRT")
+results
+tidy(results, conf.int = TRUE)
+write.csv(results, "ANOVA_PPM_CPVT_trail_distance_influence.csv")
 
 #plotting the alternative model
 plot(effectfun(PPM1, "dist_near_trails_fixed_box_CPVT_corrected_im", se.fit = TRUE), main = "Distance to trails of Charlotte Park",
      ylab = "Butternut Trees", xlab = "Distance to trails", legend = FALSE)
+#I also saved this manually (PPM Alternative distance to trails CPVT)
 
 #Butternuts by age
 #Plotting the butternuts and their distance to trails when they are colored by age, to see if age has any effect on their response to open areas
