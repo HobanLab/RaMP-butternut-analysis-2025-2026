@@ -1,0 +1,7 @@
+"","Year (add 2018!) being compared","statistic","p.value","method","alternative"
+"1","2",0.8,0.142857142857143,"Exact two-sample Kolmogorov-Smirnov test","two-sided"
+"2","3",0.4,0.873015873015873,"Exact two-sample Kolmogorov-Smirnov test","two-sided"
+"3","4",0.255639097744361,0.80356339312861,"Exact two-sample Kolmogorov-Smirnov test","two-sided"
+"4","5",0.231884057971014,0.557179616711217,"Exact two-sample Kolmogorov-Smirnov test","two-sided"
+"5","6",0.121070234113712,0.730421855040522,"Exact two-sample Kolmogorov-Smirnov test","two-sided"
+"6","7",0.436363636363636,0.416208791208791,"Exact two-sample Kolmogorov-Smirnov test","two-sided"

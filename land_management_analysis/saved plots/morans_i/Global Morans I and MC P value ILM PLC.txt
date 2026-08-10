@@ -1,0 +1,1 @@
+Global Moran's I: 0.13543321238208    Global Moran's I Monte Carlo P-value: 0.001

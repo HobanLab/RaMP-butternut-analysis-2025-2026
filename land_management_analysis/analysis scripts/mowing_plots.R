@@ -46,13 +46,21 @@ boxplot(seedlings2024, mowing, height_ft, "Height of 2024 seedings, mowed or unm
 boxplot(seedlings2025, mowing, height_ft, "Height of 2025 seedings, mowed or unmowed")
 
 #statistically testing between these treatments (mowing damage and no mowing damage) for each individual age class using a KS test
-ks.test(seedlings2020$height_ft[data_liveseedlings$mowing == TRUE], seedlings2020$height_ft[data_liveseedlings$mowing == FALSE])
-ks.test(seedlings2021$height_ft[data_liveseedlings$mowing == TRUE], seedlings2021$height_ft[data_liveseedlings$mowing == FALSE])
-ks.test(seedlings2022$height_ft[data_liveseedlings$mowing == TRUE], seedlings2022$height_ft[data_liveseedlings$mowing == FALSE])
-ks.test(seedlings2023$height_ft[data_liveseedlings$mowing == TRUE], seedlings2023$height_ft[data_liveseedlings$mowing == FALSE])
-ks.test(seedlings2024$height_ft[data_liveseedlings$mowing == TRUE], seedlings2024$height_ft[data_liveseedlings$mowing == FALSE])
-ks.test(seedlings2025$height_ft[data_liveseedlings$mowing == TRUE], seedlings2025$height_ft[data_liveseedlings$mowing == FALSE])
+setwd(working_directory)
+setwd("saved plots/mowing_plots")
+results <- data.frame() %>% bind_rows(
+  tidy(ks.test(seedlings2020$height_ft[data_liveseedlings$mowing == TRUE], seedlings2020$height_ft[data_liveseedlings$mowing == FALSE])),
+  tidy(ks.test(seedlings2021$height_ft[data_liveseedlings$mowing == TRUE], seedlings2021$height_ft[data_liveseedlings$mowing == FALSE])),
+  tidy(ks.test(seedlings2022$height_ft[data_liveseedlings$mowing == TRUE], seedlings2022$height_ft[data_liveseedlings$mowing == FALSE])),
+  tidy(ks.test(seedlings2023$height_ft[data_liveseedlings$mowing == TRUE], seedlings2023$height_ft[data_liveseedlings$mowing == FALSE])),
+  tidy(ks.test(seedlings2024$height_ft[data_liveseedlings$mowing == TRUE], seedlings2024$height_ft[data_liveseedlings$mowing == FALSE])),
+  tidy(ks.test(seedlings2025$height_ft[data_liveseedlings$mowing == TRUE], seedlings2025$height_ft[data_liveseedlings$mowing == FALSE])),
+  .id = "Year (add 2018!) being compared"
+)
+write.csv(results, file = "KS_results_height_mowed_unmowed_seedlings_2020-2025.csv")
 
 #plotting all of these age-classes on the same plot to demonstrate the finding that there is no pattern in height measurement between mowed and unmowed seedlings
 data_mowing <- data_liveseedlings %>% filter(seedling_germ_yr>2020)
-boxplot(data_mowing, mowing, height_ft, "Height of seedlings when mowed (blue) and unmowed (red)") + facet_wrap( ~ seedling_germ_yr) + labs( x = "Mowing damage", y = "Height of seedling (ft)") + theme_classic() + stat_n_text()
+P <- boxplot(data_mowing, mowing, height_ft, "Height of seedlings when mowed (blue) and unmowed (red)") + facet_wrap( ~ seedling_germ_yr) + labs( x = "Mowing damage", y = "Height of seedling (ft)") + theme_classic() + stat_n_text()
+P
+ggsave("Height of seedlings when mowed.png", plot = P, width = 6, height = 4, units = "in")

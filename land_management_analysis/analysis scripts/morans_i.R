@@ -30,6 +30,11 @@ library(MuMIn) #to be able to use model.sel for fitting linear models with spati
 library(geoR) # to be able to use variograms with the lme, requires XQuartz from 
 library(Kendall)# to use the Kendall's Tau test to look for non-parametric correlations in the data
 
+#set your working directory
+#working_directory <- "~/GitHub/butternut-health-assessment-2025/land_management_analysis/"
+setwd(working_directory)
+setwd("saved plots/morans_i")
+
 # loading in the processed tree data 
 # NOTE: Uncomment and run line 41, sourcing Data_Processing_Script.R, if the line has not yet to be run across any of the scripts/the environment has been cleared 
 #source("./analysis scripts/DataProcessing.R")
@@ -91,15 +96,11 @@ MC.LM.metric <- moran.mc(dataframe$adult_percent_live_canopy, lw.dist, nsim = 99
 MC.LM.metric
 
 #plot of simulated Moran's I values against our value
-plot(MC.LM.metric, main="", las=1, xlab = "Percent live canopy")
-MC.LM.metric$p.value #extracting the pvalue
+plot(MC.LM.metric, main=paste0("Global Moran's I MC values ILM PLC, p value = ", MC.LM.metric$p.value), las=1, xlab = "Percent live canopy")
 
+cat(paste0("Global Moran's I: ", global.moran.I$I, "    Global Moran's I Monte Carlo P-value: ", MC.LM.metric$p.value), file = "Global Morans I and MC P value ILM PLC.txt")
 
-print(paste0("Global Moran's I: ", global.moran.I$I))
-print(paste0("Global Moran's I Monte Carlo P-value: ", MC.LM.metric$p.value))
-printout <- tidy(global.moran.I$I, conf.int=TRUE)
-
-## Local Moran's I
+## Local Morcapture.output()## Local Moran's I
 
 #setting a seed for all of the results from using the morans_I() function because localmoran_perm() uses random permutations
 set.seed(25)
@@ -142,11 +143,13 @@ ILM_results_dataframe$lag_adult_percent_live_canopy <- results[[1]]
 # Plot the lagged response variable (average amongst closest trees) vs. the variable 
 # positive slope, positive spatial autocorrelation, healthier trees are closer together and less healthy trees are closer together
 # negative slope, negative spatial autocorrelation, variation in health(canopy) of trees close together
-ggplot(data=ILM_results_dataframe, aes(x=adult_percent_live_canopy, y=lag_adult_percent_live_canopy))+
+P <- ggplot(data=ILM_results_dataframe, aes(x=adult_percent_live_canopy, y=lag_adult_percent_live_canopy))+
   geom_point()+
   geom_smooth(method = "lm", col="blue")+
   xlab("Percent live canopy")+
   ylab("Lagged percent live canopy")
+P
+ggsave("Values vs Neighboring Values ILM PLC.png", plot = P, width = 6, height = 4, units = "in")
 
 #Local Moran's I 
 
@@ -178,12 +181,15 @@ ggplot() +
   coord_sf(xlim = c(ILM_box[1], ILM_box[3]), ylim = c(ILM_box[2], ILM_box[4]))+
   labs(color = "Adjusted P Value for PLC")
 
+
 #attempting to zoom on the health metrics of the significant points
-ggplot() +
+P <- ggplot() +
   geom_sf(data =trails_ILM_trans) +
   geom_sf(data =ILM_results_dataframe, aes(size = adult_percent_live_canopy)) +
   geom_sf(data =ILM_results_dataframe, aes(color = p_live_canopy))+
   geom_sf(data = ILM_fixed_field_data_processed_sign, color = "red", aes(fill = "red"))
+P
+ggsave("Local Morans I for PLC ILM.png", plot = P, width = 6,height = 4, units = "in")
 #it's the less healthy ones that seem to be clustered??
 
 ###Live adult girdle
@@ -225,12 +231,10 @@ MC.LM.metric <- moran.mc(dataframe$live_adult_girdle, lw.dist, nsim = 999)
 MC.LM.metric
 
 #plot of simulated Moran's I values against our value
-plot(MC.LM.metric, main="", las=1, xlab = "Percent girdled")
-MC.LM.metric$p.value #extracting the pvalue
+plot(MC.LM.metric, main=paste0("Global Morans I MC Values PG ILM, P value = ", MC.LM.metric$p.value), las=1, xlab = "Percent girdled")
+#saved manually
 
-
-print(paste0("Global Moran's I: ", global.moran.I$I))
-print(paste0("Global Moran's I Monte Carlo P-value: ", MC.LM.metric$p.value))
+cat(paste0("Global Moran's I: ", global.moran.I$I, "    Global Moran's I Monte Carlo P-value: ", MC.LM.metric$p.value), file = "Global Morans I and MC P value ILM PG.txt")
 
 ## Local Moran's I
 
@@ -275,11 +279,13 @@ ILM_results_dataframe$lag_live_adult_girdle <- results[[1]]
 # Plot the lagged response variable (average amongst closest trees) vs. the variable 
 # positive slope, positive spatial autocorrelation, healthier trees are closer together and less healthy trees are closer together
 # negative slope, negative spatial autocorrelation, variation in health(canopy) of trees close together
-ggplot(data=ILM_results_dataframe, aes(x=live_adult_girdle, y=lag_live_adult_girdle))+
+P <- ggplot(data=ILM_results_dataframe, aes(x=live_adult_girdle, y=lag_live_adult_girdle))+
   geom_point()+
   geom_smooth(method = "lm", col="blue")+
   xlab("Percent girdled")+
   ylab("Lagged percent girdled")
+P
+ggsave("Values vs Neighboring Values ILM PG.png", plot = P, width = 6, height = 4, units = "in")
 
 #Local Moran's I 
 
@@ -312,11 +318,13 @@ ggplot() +
   labs(color = "Adjusted P Value for PLC")
 
 #attempting to zoom on the healths of the significant point
-ggplot() +
+P <- ggplot() +
   geom_sf(data =trails_ILM_trans) +
   geom_sf(data =ILM_results_dataframe, aes(size = live_adult_girdle)) +
   geom_sf(data =ILM_results_dataframe, aes(color = p_live_girdle))+
   geom_sf(data = ILM_fixed_field_data_processed_sign, color = "red", aes(fill = "red"))
+P
+ggsave("Local Morans I PG ILM.png", plot = P, width = 6, height = 4, units = "in")
 
 
 ###Test for CPVT###
@@ -359,12 +367,10 @@ MC.LM.metric <- moran.mc(dataframe$adult_percent_live_canopy, lw.dist, nsim = 99
 MC.LM.metric
 
 #plot of simulated Moran's I values against our value
-plot(MC.LM.metric, main="", las=1, xlab = "Percent live canopy")
-MC.LM.metric$p.value #extracting the pvalue
+plot(MC.LM.metric, main=paste0("Global Morans I MC Values PLC CPVT, p value = ", MC.LM.metric$p.value), las=1, xlab = "Percent live canopy")
+#save manually
 
-
-print(paste0("Global Moran's I: ", global.moran.I$I))
-print(paste0("Global Moran's I Monte Carlo P-value: ", MC.LM.metric$p.value))
+cat(paste0("Global Moran's I: ", global.moran.I$I, "    Global Moran's I Monte Carlo P-value: ", MC.LM.metric$p.value), "Global Morans I and MC P value CPVT PLC.txt")
 
 ## Local Moran's I
 
@@ -409,11 +415,13 @@ CPVT_results_dataframe$lag_adult_percent_live_canopy <- results[[1]]
 # Plot the lagged response variable (average amongst closest trees) vs. the variable 
 # positive slope, positive spatial autocorrelation, healthier trees are closer together and less healthy trees are closer together
 # negative slope, negative spatial autocorrelation, variation in health(canopy) of trees close together
-ggplot(data=CPVT_results_dataframe, aes(x=adult_percent_live_canopy, y=lag_adult_percent_live_canopy))+
+P <- ggplot(data=CPVT_results_dataframe, aes(x=adult_percent_live_canopy, y=lag_adult_percent_live_canopy))+
   geom_point()+
   geom_smooth(method = "lm", col="blue")+
   xlab("Percent live canopy")+
   ylab("Lagged percent live canopy")
+P
+ggsave("CPVT PLC values vs. neighboring (lagged) values.png", plot = P, width = 6, height = 4, units = "in")
 
 #Local Moran's I 
 
@@ -446,12 +454,13 @@ ggplot() +
   labs(color = "Adjusted P Value for PLC")
 
 #attempting to zoom on the sizes of the significant point
-ggplot() +
+P <- ggplot() +
   geom_sf(data =trails_CPVT_trans) +
   geom_sf(data =CPVT_results_dataframe, aes(size = adult_percent_live_canopy)) +
   geom_sf(data =CPVT_results_dataframe, aes(color = p_live_canopy))+
   geom_sf(data = CPVT_fixed_field_data_processed_sign, color = "red", aes(fill = "red"))
-#it's the less healthy ones that seem to be clustered??
+P
+ggsave("Local Morans I Values CPVT PLC.png", plot = P, width = 6, height = 4, units = "in")
 
 ###Live adult girdle
 
@@ -492,12 +501,11 @@ MC.LM.metric <- moran.mc(dataframe$live_adult_girdle, lw.dist, nsim = 999)
 MC.LM.metric
 
 #plot of simulated Moran's I values against our value
-plot(MC.LM.metric, main="", las=1, xlab = "Percent girdled")
-MC.LM.metric$p.value #extracting the pvalue
+plot(MC.LM.metric, main=paste0("Global Morans I Values CPVT PG, p value = ", MC.LM.metric$p.value), las=1, xlab = "Percent girdled")
+#save manually
 
 
-print(paste0("Global Moran's I: ", global.moran.I$I))
-print(paste0("Global Moran's I Monte Carlo P-value: ", MC.LM.metric$p.value))
+cat(paste0("Global Moran's I: ", global.moran.I$I, "     Global Moran's I Monte Carlo P-value: ", MC.LM.metric$p.value), "Global Morans I and MC P Value CPVT PG.txt")
 
 ## Local Moran's I
 
@@ -542,12 +550,13 @@ CPVT_results_dataframe$lag_live_adult_girdle <- results[[1]]
 # Plot the lagged response variable (average amongst closest trees) vs. the variable 
 # positive slope, positive spatial autocorrelation, healthier trees are closer together and less healthy trees are closer together
 # negative slope, negative spatial autocorrelation, variation in health(canopy) of trees close together
-ggplot(data=CPVT_results_dataframe, aes(x=live_adult_girdle, y=lag_live_adult_girdle))+
+P <- ggplot(data=CPVT_results_dataframe, aes(x=live_adult_girdle, y=lag_live_adult_girdle))+
   geom_point()+
   geom_smooth(method = "lm", col="blue")+
   xlab("Percent girdled")+
   ylab("Lagged percent girdled")
-
+P
+ggsave("CPVT PG values vs. neighboring (lagged) values.png", plot = P, width = 6, height = 4, units = "in")
 #Local Moran's I 
 
 #assigning a Monta Carlo dataframe for plotting
@@ -579,8 +588,10 @@ ggplot() +
   labs(color = "Adjusted P Value for PLC")
 
 #attempting to zoom on the healths of the significant point
-ggplot() +
+P <- ggplot() +
   geom_sf(data =trails_CPVT_trans) +
   geom_sf(data =CPVT_results_dataframe, aes(size = live_adult_girdle)) +
   geom_sf(data =CPVT_results_dataframe, aes(color = p_live_girdle))+
   geom_sf(data = CPVT_fixed_field_data_processed_sign, color = "red", aes(fill = "red"))
+P
+ggsave("Local Morans I CPVT PG.png", plot = P, width = 6, height= 4, units = "in")
