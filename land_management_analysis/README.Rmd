@@ -79,7 +79,10 @@ morans_i.R
 
 mowing_plots.R
 	This script helps us visualize the differences between seedlings that have experienced mowing damage and those that have not.
-	I create subgroups of the seedling data based on germination year, then within germination years 
+	I create subgroups of the seedling data based on germination year, then within germination years
+	I create boxplots of the height of mowed seedlings versus the height of unmowed seedlings for each germ year
+	I save all the KS tests of the mowed/unmowed seedling heights into a dataframe, and save that
+	Then I create one final plot that combines all the boxplots of each group of mowed and unmowed seedlings in each germ year after 2020 to show that there is no consistent difference in height for these groups.
 
 	What would be nice to do on this at a later point is see if the seedlings that have experienced mowing damage are closer to trails than the average seedling, to see if the mowing damage is concentrated near there or if it can occur anywhere in the site for site maintenance.  It might be a bit challenging because pretty much all of the seedlings (esp. at CPVT) are extremely close to trails.
 
