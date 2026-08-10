@@ -43,12 +43,12 @@ dist_near_trails_fixed_box_ILM
 
 All rasters of distance values to the trails, either in a buffer around the trails (buffer) or in the whole bounding box surrounding the butternut occurrences (fixed_box).
 
-If you don't want to run DataProcessing.R at all, you can also just load in workplace_land_management.Rdata which loads in all the created layers and dataframes.
+If you don't want to run DataProcessing.R at all, you can also just load in workspace_land_management.Rdata which loads in all the created layers and dataframes.
 
 
 ## Usage of scripts
 
-DataProcessing.R
+DataProcessing.R (RUN THIS FIRST! or at least load in workspace_land_management.Rdata, which skips to the ending of this script.  You will need files created in this script to run Butternut_distribution_testing.R, Morans_i.R, and Soil_analysis.R)
 
 Create shapefiles of:
 	Butternut trees ([site]_fixed_field_data_processed, for both ILM and CPVT)
@@ -68,7 +68,7 @@ Butternut_distribution_testing
 6) Plot the Randomized Points, convex hull, and trail shapefiles
 7) Plot the histogram of simulated randomized average nearest neighbor values with a line for the actual ANN value
 8) Calculate and store the p-value 
-9) I then do another ANN analysis when controlling for the trail
+9) I then do another ANN analysis when controlling for the trail (on the trail, as well as on and inside the trail)
 10) Then we do a Poison Point Model (ppm()) for our null hypothesis (trails do not influence location of butternuts) and alternative hypothesis (trails do influence the location of butternuts), and then compare them with an ANOVA likelihood ratio test
 
 morans_i.R
