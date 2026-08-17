@@ -132,9 +132,34 @@ plot_out_histogram <- function(cat){
     theme_classic()
 }
 
+combined_histogram <- function(cat){
+  # Source - https://stackoverflow.com/a/36015931
+  ggplot(ILM_stored_random_distributions_cleaned, aes(x = {{cat}}))+
+    geom_histogram(fill = "dodgerblue1", color = "black")+
+    geom_vline(xintercept= as.numeric(ILM_stored_real_distribution_cleaned[[deparse(substitute(cat))]]), col = "red")+ #line of our real slope
+    labs(title = paste0("Soil ", deparse(substitute(cat))), subtitle = paste0("Quantile of real value: ", ILM_real_vs_random_quantiles[[deparse(substitute(cat))]]))+
+    theme_classic()
+}
+
+
 setwd(working_directory)
 setwd("saved plots/soil_distribution_plots")
 #credit to https://www.geeksforgeeks.org/r-language/save-plot-in-data-object-in-base-r/
+P <- (combined_histogram(AaA) +
+combined_histogram(AaB) +
+combined_histogram(AbA) +
+    combined_histogram(BcC) +
+    combined_histogram(BcB) +
+    combined_histogram(BdB)) /
+(combined_histogram(BdC) +
+  combined_histogram(BdD) +
+  combined_histogram(CbA) +
+  combined_histogram(CbB) +
+  combined_histogram(KbA) +
+  combined_histogram(KbB)) +
+  plot_annotation(title = "ILM Simulated number of butternuts vs. Real number (red), n = 249", tag_levels = "A")
+ggsave("ILM simulated butternuts vs real number in each soil type.png", plot = P, width = 8, height = 6, units = "in")
+
 ggsave("BcB_ILM.png", plot = plot_out_histogram(BcB), width = 6, height = 4, units = "in")
 ggsave("AaC_ILM.png", plot = plot_out_histogram(AaC), width = 6, height = 4, units = "in")
 ggsave("BdC_ILM.png", plot = plot_out_histogram(BdC), width = 6, height = 4, units = "in")
@@ -254,6 +279,33 @@ plot_out_histogram <- function(cat){
     theme_classic()
 }
 
+combined_histogram <- function(cat){
+  # Source - https://stackoverflow.com/a/36015931
+  ggplot(CPVT_stored_random_distributions_cleaned, aes(x = {{cat}}))+
+    geom_histogram(fill = "dodgerblue1", color = "black")+
+    geom_vline(xintercept= as.numeric(CPVT_stored_real_distribution_cleaned[[deparse(substitute(cat))]]), col = "red")+ #line of our real slope
+    labs(title = paste0("Soil ", deparse(substitute(cat))), subtitle = paste0("Quantile of real value: ", CPVT_real_vs_random_quantiles[[deparse(substitute(cat))]]))+
+    theme_classic()
+}
+
+setwd(working_directory)
+setwd("saved plots/soil_distribution_plots")
+#credit to https://www.geeksforgeeks.org/r-language/save-plot-in-data-object-in-base-r/
+P <- (combined_histogram(Cv) +
+        combined_histogram(FaC) +
+        combined_histogram(GeB) +
+        combined_histogram(GgC) +
+        combined_histogram(PaB) +
+        combined_histogram(PaC)) /
+  (combined_histogram(SuB) +
+     combined_histogram(SuC) +
+     combined_histogram(SuD) +
+     combined_histogram(SxE) +
+     combined_histogram(VeB)) +
+  plot_annotation(title = "CPVT Simulated number of butternuts vs. Real number (red), n = 163", tag_levels = "A")
+P
+ggsave("CPVT simulated butternuts vs real number in each soil type.png", plot = P, width = 8, height = 6, units = "in")
+
 setwd(working_directory)
 setwd("saved plots/soil_distribution_plots")
 #credit to https://www.geeksforgeeks.org/r-language/save-plot-in-data-object-in-base-r/
@@ -334,3 +386,87 @@ boxplot(data_CPVTliveadults_w_soil, MUSYM, live_adult_purdue_canker_rating, "Pur
 
 boxplot(data_ILMliveadults_w_soil, MUSYM, live_adult_purdue_canopy_ranking, "Purdue canopy ranking at ILM by soil") + stat_n_text()
 boxplot(data_CPVTliveadults_w_soil, MUSYM, live_adult_purdue_canopy_ranking, "Purdue canopy ranking at CPVT by soil") + stat_n_text()
+
+#tmaps of ILM
+P <-  tm_shape(soil_map_ILM) +
+  tm_polygons(fill = "MUSYM", fill.scale = tm_scale_categorical(
+    values = "tol.rainbow")) +
+  tm_shape(ILM_polygon) + 
+  tm_borders(col = "bisque") +
+  tm_shape(ILM_fixed_field_data_processed_box) +
+  tm_borders(col = "brown") + 
+  tm_shape(trails_ILM) +
+  tm_polygons(fill = "burlywood4", col = "burlywood4") +
+  tm_shape(ILM_fixed_field_data_processed_sf) +
+  tm_dots(fill = "green") +
+  tm_title("ILM butternuts (green) and ILM trails (brown)") +
+  tm_grid() +
+  tm_graticules()
+P
+setwd(working_directory)
+setwd("saved plots/soil_distribution_plots")
+tmap_save("ILM soil map.png", tm = P)
+
+tm_shape(ILM_polygon) + 
+  tm_polygons(fill = "bisque", col = "bisque") +
+  tm_shape(trails_ILM) +
+  tm_polygons(fill = "burlywood4", col = "burlywood4") +
+  tm_shape(ILM_fixed_field_data_processed_sf) +
+  tm_dots("age_clark", fill.scale = tm_scale_continuous(
+    values = "nightfall",
+    values.scale = 2, 
+    limits = c(1920 , 2025), 
+    ticks = c(1920, 1940, 1960, 1980, 2000, 2020), 
+    labels = c("1920", "1940", "1960", "1980", 
+               "2000", "2020"), 
+    outliers.trunc = c(TRUE, TRUE)),
+    fill.legend = tm_legend(title = "Germ. year")) +
+  tm_title("Butternuts by age with site trails (brown)") +
+  tm_grid() +
+  tm_graticules()
+
+tm_shape(CPVT_polygon) + 
+  tm_polygons(fill = "bisque", col = "bisque") +
+  tm_shape(trails_CPVT) +
+  tm_polygons(fill = "burlywood4", col = "burlywood4") +
+  tm_shape(CPVT_fixed_field_data_processed_sf) +
+  tm_dots("age_clark", fill.scale = tm_scale_continuous(values = "scico.roma")) +
+  tm_title("CPVT butternuts (green) and CPVT trails (brown)") +
+  tm_grid() +
+  tm_graticules()
+
+#tmaps of CPVT
+P <-  tm_shape(soil_map_CPVT) +
+  tm_polygons(fill = "MUSYM", fill.scale = tm_scale_categorical(
+    values = "tol.rainbow")) +
+    tm_shape(CPVT_polygon) + 
+    tm_borders(col = "bisque") +
+    tm_shape(CPVT_fixed_field_data_processed_box) +
+    tm_borders(col = "brown") + 
+  tm_shape(trails_CPVT) +
+  tm_polygons(fill = "burlywood4", col = "burlywood4") +
+  tm_shape(CPVT_fixed_field_data_processed_sf) +
+  tm_dots(fill = "green") +
+  tm_title("CPVT butternuts (green) and CPVT trails (brown)") +
+  tm_grid() +
+  tm_graticules()
+P
+tmap_save("CPVT soil map.png", tm = P)
+
+tm_shape(CPVT_polygon) + 
+  tm_polygons(fill = "bisque", col = "bisque") +
+  tm_shape(trails_CPVT) +
+  tm_polygons(fill = "burlywood4", col = "burlywood4") +
+  tm_shape(CPVT_fixed_field_data_processed_sf) +
+  tm_dots("age_clark", fill.scale = tm_scale_continuous(
+    values = "nightfall",
+    values.scale = 2, 
+    limits = c(1920 , 2025), 
+    ticks = c(1920, 1940, 1960, 1980, 2000, 2020), 
+    labels = c("1920", "1940", "1960", "1980", 
+               "2000", "2020"), 
+    outliers.trunc = c(TRUE, TRUE)),
+    fill.legend = tm_legend(title = "Germ. year")) +
+  tm_title("Butternuts by age with site trails (brown)") +
+  tm_grid() +
+  tm_graticules()
