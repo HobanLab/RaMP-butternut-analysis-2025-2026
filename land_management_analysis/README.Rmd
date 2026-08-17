@@ -43,12 +43,12 @@ dist_near_trails_fixed_box_ILM
 
 All rasters of distance values to the trails, either in a buffer around the trails (buffer) or in the whole bounding box surrounding the butternut occurrences (fixed_box).
 
-If you don't want to run DataProcessing.R at all, you can also just load in workplace_land_management.Rdata which loads in all the created layers and dataframes.
+If you don't want to run DataProcessing.R at all, you can also just load in workspace_land_management.Rdata which loads in all the created layers and dataframes.
 
 
 ## Usage of scripts
 
-DataProcessing.R
+DataProcessing.R (RUN THIS FIRST! or at least load in workspace_land_management.Rdata, which skips to the ending of this script.  You will need files created in this script to run Butternut_distribution_testing.R, Morans_i.R, and Soil_analysis.R)
 
 Create shapefiles of:
 	Butternut trees ([site]_fixed_field_data_processed, for both ILM and CPVT)
@@ -68,7 +68,7 @@ Butternut_distribution_testing
 6) Plot the Randomized Points, convex hull, and trail shapefiles
 7) Plot the histogram of simulated randomized average nearest neighbor values with a line for the actual ANN value
 8) Calculate and store the p-value 
-9) I then do another ANN analysis when controlling for the trail
+9) I then do another ANN analysis when controlling for the trail (on the trail, as well as on and inside the trail)
 10) Then we do a Poison Point Model (ppm()) for our null hypothesis (trails do not influence location of butternuts) and alternative hypothesis (trails do influence the location of butternuts), and then compare them with an ANOVA likelihood ratio test
 
 morans_i.R
@@ -79,7 +79,10 @@ morans_i.R
 
 mowing_plots.R
 	This script helps us visualize the differences between seedlings that have experienced mowing damage and those that have not.
-	I create subgroups of the seedling data based on germination year, then within germination years 
+	I create subgroups of the seedling data based on germination year, then within germination years
+	I create boxplots of the height of mowed seedlings versus the height of unmowed seedlings for each germ year
+	I save all the KS tests of the mowed/unmowed seedling heights into a dataframe, and save that
+	Then I create one final plot that combines all the boxplots of each group of mowed and unmowed seedlings in each germ year after 2020 to show that there is no consistent difference in height for these groups.
 
 	What would be nice to do on this at a later point is see if the seedlings that have experienced mowing damage are closer to trails than the average seedling, to see if the mowing damage is concentrated near there or if it can occur anywhere in the site for site maintenance.  It might be a bit challenging because pretty much all of the seedlings (esp. at CPVT) are extremely close to trails.
 
