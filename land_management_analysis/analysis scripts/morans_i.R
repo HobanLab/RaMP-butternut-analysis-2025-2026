@@ -117,6 +117,8 @@ dataframe$p.metric.adjusted <- p.adjust(dataframe$p.metric,
 
 #Number of trees with significant adjusted Moran's I
 sig.tree <- length(which(dataframe$p.metric.adjusted < 0.05))
+ILM_sign_local_morans <- c(which(dataframe$p.metric.adjusted < 0.05))
+dataframe$number[ILM_sign_local_morans]
 
 #filtering out significant p-values
 dataframe_sign <- dataframe %>%
